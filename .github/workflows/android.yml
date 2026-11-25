@@ -1,5 +1,7 @@
 name: Android development build
 on:
+  push:
+    branches: [codex/v06-lobby-unity]
   workflow_dispatch:
 permissions:
   contents: read
