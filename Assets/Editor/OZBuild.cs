@@ -46,6 +46,7 @@ public static class OZBuild
         game.view = camera;
         game.effectsMaterial = OZContent.EffectsMaterial();
         root.AddComponent<OZHud>().game = game;
+        OZLobbyContent.Install(root, game);
 
         if (!AssetDatabase.IsValidFolder("Assets/Scenes"))
             AssetDatabase.CreateFolder("Assets", "Scenes");
@@ -166,6 +167,8 @@ public static class OZBuild
             throw new InvalidOperationException("Instale Android Build Support, SDK, NDK e OpenJDK.");
         Prepare();
         PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.Android, "com.operationzero.game");
+        PlayerSettings.bundleVersion = "0.6";
+        PlayerSettings.Android.bundleVersionCode = 6;
         PlayerSettings.Android.minSdkVersion = AndroidSdkVersions.AndroidApiLevel26;
         PlayerSettings.Android.targetArchitectures = AndroidArchitecture.ARM64;
         PlayerSettings.SetScriptingBackend(NamedBuildTarget.Android, ScriptingImplementation.IL2CPP);

@@ -139,5 +139,107 @@
     "sha256": "708eff9df647f0ecf258467e983052e164286d1dc579e763a6d8261074d3eb9a",
     "source": "https://opengameart.org/content/m4a1-assault-rifle",
     "license": "CC0-1.0"
+  },
+  "Assets/Content/Lobby/Armas.jpg": {
+    "bytes": 7995,
+    "sha256": "159f14a280a12f49e2b66a72018472e318edaa299b9fe57ec334cae0371680f4",
+    "source": "https://opengameart.org/content/m4a1-assault-rifle",
+    "license": "CC0-1.0 (modelo); arte original do projeto"
+  },
+  "Assets/Content/Lobby/Barlow-Bold.ttf": {
+    "bytes": 35632,
+    "sha256": "755ce6fd42664f855c4460a68827dee6515404f20e6979d0fe1556732a7b576b",
+    "source": "https://github.com/jpt/barlow",
+    "license": "OFL-1.1"
+  },
+  "Assets/Content/Lobby/Barlow-Regular.ttf": {
+    "bytes": 34020,
+    "sha256": "b42f4220ba2662fccfa9a17ec139adb2b746cc0830cd6555d903fa2f4b6e45c0",
+    "source": "https://github.com/jpt/barlow",
+    "license": "OFL-1.1"
+  },
+  "Assets/Content/Lobby/Barlow-Title.ttf": {
+    "bytes": 37684,
+    "sha256": "3d7b370c68e0b79c394a7ff380e3dc16e0e5020512ac3bb7a59780136b0e0869",
+    "source": "https://github.com/jpt/barlow",
+    "license": "OFL-1.1"
+  },
+  "Assets/Content/Lobby/Costa-Card.jpg": {
+    "bytes": 17806,
+    "sha256": "7bcbe017c94701c00d30c3f8f0fe7c4321e2c53b3cb4ea41fbc6bbb84285298d",
+    "source": "Assets/Content/Lobby/Creditos.txt",
+    "license": "Produzido para Operação Zero"
+  },
+  "Assets/Content/Lobby/Costa.jpg": {
+    "bytes": 401111,
+    "sha256": "5347d9d577defce2115ffb28de323dd8f07d872a4e1816cb2cf2e501086d8b8f",
+    "source": "Assets/Content/Lobby/Creditos.txt",
+    "license": "Produzido para Operação Zero"
+  },
+  "Assets/Content/Lobby/Creditos.txt": {
+    "bytes": 1366,
+    "sha256": "c2d00af28fc1247dd0cc1b1bff80ca9ec16b2ecaa3abd9f92f580a14fb476c49",
+    "source": "Assets/Content/Lobby/Creditos.txt",
+    "license": "Produzido para Operação Zero"
+  },
+  "Assets/Content/Lobby/Gold.png": {
+    "bytes": 16017,
+    "sha256": "504ee4b525c3e5d7090426606a4c6ea49d5a70eb1493340768a655652e2d8ed0",
+    "source": "Assets/Content/Lobby/Creditos.txt",
+    "license": "Produzido para Operação Zero"
+  },
+  "Assets/Content/Lobby/Jogar.png": {
+    "bytes": 324,
+    "sha256": "9c5b7c9fd35d8a1579c7d7b54244ab91c6483c863e7ad0113438fa77d7c6cf9d",
+    "source": "Assets/Content/Lobby/Creditos.txt",
+    "license": "Produzido para Operação Zero"
+  },
+  "Assets/Content/Lobby/Marca.png": {
+    "bytes": 32425,
+    "sha256": "51c930d1932270e326fee49b5e99089eb35c0442e598d7d066aa8e579afd5bc7",
+    "source": "Assets/Content/Lobby/Creditos.txt",
+    "license": "Produzido para Operação Zero"
+  },
+  "Assets/Content/Lobby/OFL-Barlow.txt": {
+    "bytes": 6167,
+    "sha256": "046ee27d8bddc6b6ee08eee53c96dbf3ec1f6df561644e018507dd8ffcb11d31",
+    "source": "https://github.com/jpt/barlow",
+    "license": "OFL-1.1"
+  },
+  "Assets/Content/Lobby/Pacotes.jpg": {
+    "bytes": 13827,
+    "sha256": "b94469228fdd5b669a0f123bb38388c0938e24f5bb00b045d9aecacf2662cca5",
+    "source": "Assets/Content/Lobby/Creditos.txt",
+    "license": "Produzido para Operação Zero"
+  },
+  "Assets/Content/Lobby/Panel.png": {
+    "bytes": 12491,
+    "sha256": "9d4bc485c71d1a8403fe530a189f73d29f145266ae94dfb6669406b2d7e70189",
+    "source": "Assets/Content/Lobby/Creditos.txt",
+    "license": "Produzido para Operação Zero"
+  },
+  "Assets/Content/Lobby/Skins.jpg": {
+    "bytes": 10989,
+    "sha256": "54b1acac45272a2cca766e6c8e9d082e64547c606c9487f0aea957c724d822e2",
+    "source": "WebGame/assets/soldier.glb; Assets/Content/Lobby/Creditos.txt",
+    "license": "CC-BY-4.0 and CC0-1.0"
+  },
+  "Assets/Content/Lobby/Vigia.fbx": {
+    "bytes": 1757756,
+    "sha256": "3b7297253e15634fae7d09b0dfd027d0541c7dfbf948638245ee311f50cc9c17",
+    "source": "WebGame/assets/soldier.glb; Assets/Content/Lobby/Creditos.txt",
+    "license": "CC-BY-4.0 and CC0-1.0"
+  },
+  "Assets/Content/Lobby/Weave-Normal.png": {
+    "bytes": 1136,
+    "sha256": "9547902e6a2a7d5d2bfa546d83e08f2562abda9b99fe9e093e7ac1ac7feed389",
+    "source": "Assets/Content/Lobby/Creditos.txt",
+    "license": "Produzido para Operação Zero"
+  },
+  "Assets/Content/Lobby/Weave.png": {
+    "bytes": 14815,
+    "sha256": "9427db5814f3f9dd99fa9d52e98c4a3a6b058f1ce0985cc565521c0b37d97fad",
+    "source": "Assets/Content/Lobby/Creditos.txt",
+    "license": "Produzido para Operação Zero"
   }
 }

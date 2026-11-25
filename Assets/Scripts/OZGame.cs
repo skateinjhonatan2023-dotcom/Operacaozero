@@ -21,6 +21,10 @@ public sealed class OZGame : MonoBehaviour {
  UnityEngine.Rendering.RenderPipelineAsset previousQuality;
  float nextZoneDraw;
  public bool Deploying { get; private set; }
+ public int WeaponCount => names.Length;
+ public string GetWeaponName(int index) => names[index];
+ public int GetWeaponCapacity(int index) => capacity[index];
+ public int GetWeaponDamage(int index) => damage[index];
  public int Weapon { get; private set; } public int Ammo=>ammo[Weapon]; public int Reserve=>reserve[Weapon]; public string WeaponName=>names[Weapon]; public int XP=>PlayerPrefs.GetInt("OZ_XP",0);
  readonly string[] names={"Rifle","SMG","Sniper","Pistola"};readonly int[] capacity={30,24,5,12},damage={34,24,95,30};readonly float[] rate={.13f,.08f,.85f,.24f},reach={100,65,220,45}; readonly int[] ammo={30,24,5,12},reserve={120,144,25,72};
  float yaw,pitch=8,vy,nextShot,reloadUntil,slideUntil,startTime; int reloadWeapon; CharacterController cc; AudioSource audioSource; bool finished;

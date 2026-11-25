@@ -12,3 +12,13 @@ Os recursos abaixo usam [CC0 1.0](https://creativecommons.org/publicdomain/zero/
 | Som de disparo | kurt | [Gunshots, OpenGameArt](https://opengameart.org/content/gunshots). Arquivo `22 Pistol.wav` convertido para mono a 44,1 kHz. |
 
 A copa do paraquedas, o terreno, os armazéns, o loot e os efeitos de zona e traçantes são gerados pelo código. Os créditos do cliente web legado permanecem em `LegacyServer/CREDITOS.txt`.
+
+
+## Lobby Unity V0.6
+
+| Conteúdo | Origem e licença |
+| --- | --- |
+| `Vigia.fbx` | Modelo de BAMEN, [FREE Military Soldier RIGGED](https://sketchfab.com/3d-models/free-military-soldier-rigged-e9c56308a67d4a3db62e914fafa4d198), [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). Derivado do GLB adaptado por [cktang88](https://github.com/cktang88/3d-fps/blob/main/README.md#credits--licences), com o ciclo `ready_idle`, materiais alterados e posicionamento do rifle gravado na animação. Créditos de origem incluem [Quaternius](https://quaternius.com/) e [100STYLE](https://zenodo.org/records/8127870) de Ian Mason, Sebastian Starke e Taku Komura. O rifle de nisu mantém CC0. |
+| Barlow Condensed | [The Barlow Project Authors](https://github.com/jpt/barlow), SIL OFL 1.1. Pesos regular, negrito e extra-negrito itálico convertidos de WOFF para TTF. Licença acompanhada no projeto e acessível no lobby. |
+| Cenário e cartões | Panorama original gerado para Operação Zero. Os cartões de operador e rifle derivam de renderizações dos modelos creditados e o cartão de pacotes deriva do panorama. |
+| Marca, painéis e tecido | Grafismos, textura de tecido e normal criados para Operação Zero. |

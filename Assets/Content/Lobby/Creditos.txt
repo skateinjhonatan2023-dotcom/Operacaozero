@@ -1,0 +1,26 @@
+OPERAÇÃO ZERO · CRÉDITOS DO LOBBY
+
+Vigia, personagem militar com rig
+BAMEN, “FREE [Military Soldier] RIGGED”, CC BY 4.0.
+https://sketchfab.com/3d-models/free-military-soldier-rigged-e9c56308a67d4a3db62e914fafa4d198
+Adaptação do GLB por cktang88. O projeto adaptou a pose, a animação de respiração, os materiais, a iluminação e o posicionamento do rifle para uma cena Unity e exportou o modelo em FBX.
+https://github.com/cktang88/3d-fps/blob/main/README.md#credits--licences
+https://creativecommons.org/licenses/by/4.0/
+
+Animações do GLB de origem
+Bibliotecas Quaternius Universal Animation Library, CC0.
+https://quaternius.com/
+O GLB de origem também credita 100STYLE de Ian Mason, Sebastian Starke e Taku Komura, CC BY 4.0, com recorte e retarget por cktang88.
+https://zenodo.org/records/8127870
+
+Rifle
+nisu, “M4A1 Assault Rifle”, CC0. Malhas reunidas, pivô adaptado e mapas PBR.
+https://opengameart.org/content/m4a1-assault-rifle
+https://creativecommons.org/publicdomain/zero/1.0/
+
+Arte
+Panorama costeiro criado com geração de imagem para Operação Zero. Cartões da loja usam imagens derivadas do panorama e renderizações dos modelos creditados acima. Logo, botões e textura de tecido foram produzidos para o projeto.
+
+Tipografia
+Barlow Condensed, The Barlow Project Authors, SIL Open Font License 1.1.
+https://github.com/jpt/barlow
