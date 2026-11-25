@@ -1,0 +1,2 @@
+BLOQUEADO: Unity Editor ausente. Defina UNITY_EDITOR para o executável do Unity 6000.0.38f1.
+exit=2

@@ -1,0 +1,29 @@
+{
+  "assets": {
+    "soldier.glb": {
+      "status": "blocked",
+      "sources": [
+        "https://raw.githubusercontent.com/cktang88/3d-fps/main/public/assets/models/characters/soldier.glb",
+        "https://github.com/cktang88/3d-fps/raw/refs/heads/main/public/assets/models/characters/soldier.glb"
+      ],
+      "error": "<urlopen error [Errno -3] Temporary failure in name resolution>; <urlopen error [Errno -3] Temporary failure in name resolution>; <urlopen error [Errno -3] Temporary failure in name resolution>; <urlopen error [Errno -3] Temporary failure in name resolution>"
+    },
+    "concrete.jpg": {
+      "status": "blocked",
+      "sources": [
+        "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/concrete_wall_008/concrete_wall_008_diff_2k.jpg"
+      ],
+      "error": "<urlopen error [Errno -3] Temporary failure in name resolution>; <urlopen error [Errno -3] Temporary failure in name resolution>"
+    },
+    "asphalt.jpg": {
+      "status": "blocked",
+      "sources": [
+        "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/asphalt_02/asphalt_02_diff_2k.jpg"
+      ],
+      "error": "<urlopen error [Errno -3] Temporary failure in name resolution>; <urlopen error [Errno -3] Temporary failure in name resolution>"
+    }
+  },
+  "missing_runtime": [],
+  "ready": false
+}
+download_exit=1

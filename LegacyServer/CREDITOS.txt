@@ -1,0 +1,7 @@
+OPERATION ZERO — Recursos externos (não incluídos como binários nesta entrega)
+Soldado: FREE [Military Soldier] RIGGED por BAMEN — CC BY 4.0 https://creativecommons.org/licenses/by/4.0/
+Original: https://sketchfab.com/3d-models/free-military-soldier-rigged-e9c56308a67d4a3db62e914fafa4d198
+Versão adaptada e animações retargetadas de cktang88/3d-fps: https://github.com/cktang88/3d-fps
+Animações: Quaternius Universal Animation Library 1 e 2, CC0 https://quaternius.com; 100STYLE por Ian Mason, Sebastian Starke e Taku Komura, CC BY 4.0 https://zenodo.org/records/8127870. A versão GLB foi modificada pelo projeto 3d-fps; nesta integração é redimensionada e recebe arma separada.
+Asfalto 02 (Rob Tuytel) e Concrete Wall 008 (Charlotte Dario / Poly Haven), CC0 https://polyhaven.com/a/asphalt_02 https://polyhaven.com/a/concrete_wall_008
+Three.js — MIT https://github.com/mrdoob/three.js

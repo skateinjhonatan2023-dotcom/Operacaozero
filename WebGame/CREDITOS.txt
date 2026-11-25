@@ -1,0 +1,54 @@
+Operação Zero — Edição Web 3D
+
+Personagem: FREE [Military Soldier] RIGGED, de BAMEN, CC BY 4.0.
+https://sketchfab.com/3d-models/free-military-soldier-rigged-e9c56308a67d4a3db62e914fafa4d198
+GLB distribuído e adaptado por cktang88 (re-rig, pose, escala, texturas e animações).
+https://github.com/cktang88/3d-fps/blob/main/README.md#credits--licences
+Mocap: 100STYLE de Ian Mason, Sebastian Starke e Taku Komura, CC BY 4.0,
+ciclos extraídos, ajustados e retargetados por cktang88.
+https://zenodo.org/records/8127870
+https://creativecommons.org/licenses/by/4.0/
+Animações adicionais: Quaternius Universal Animation Library 1 e 2, CC0, retargetadas.
+https://quaternius.com
+Rifle: nisu, CC0 (malhas reunidas, pivô alterado, exportado para GLB).
+https://opengameart.org/content/m4a1-assault-rifle
+Texturas: Poly Haven, CC0 (Asphalt 02, Concrete Wall 008 e Grass Ground).
+https://polyhaven.com
+https://creativecommons.org/publicdomain/zero/1.0/
+Rochas costeiras: Poly Haven, CC0. Coast Rocks 01 convertido para GLB de 948 triângulos.
+https://polyhaven.com/a/coast_rocks_01
+Som de disparo: kurt, CC0. 22 Pistol.wav convertido para mono e recortado.
+https://opengameart.org/content/gunshots
+Vegetação: Island Tree 01, por Rob Tuytel e Rico Cilliers, Poly Haven, CC0.
+Malha reduzida e texturas difusas reamostradas para a edição web.
+https://polyhaven.com/a/island_tree_01
+
+Operadores 0.6: Vigia, Brasa e Íris usam o esqueleto e a malha licenciados de BAMEN
+já creditados acima. Materiais, acessórios, textura têxtil procedural e identidades foram
+criados para Costa de Ferro. O pacote inclui mapas normais OpenGL da Poly Haven,
+CC0, para Asphalt 02, Concrete Wall 008, Grass Ground e Coast Rocks 01.
+https://polyhaven.com/a/asphalt_02
+https://polyhaven.com/a/concrete_wall_008
+https://polyhaven.com/a/grass_ground
+https://polyhaven.com/a/coast_rocks_01
+
+Costa de Ferro 0.7: rostos, olhos, sobrancelhas e cabelos de Brasa e Íris
+adaptados do pacote Universal Base Characters Standard, de Quaternius, CC0 1.0.
+Os acessórios de cabeça foram recortados, reamostrados e presos ao esqueleto BAMEN
+já creditado. Costa, mar animado, guindastes, píeres e embarcações são originais.
+https://quaternius.com/packs/universalbasecharacters.html
+https://creativecommons.org/publicdomain/zero/1.0/
+
+Costa de Ferro 0.8: acabamentos de armas, sons sintetizados, novos acessórios de
+torso e efeitos de granada criados para Operação Zero.
+Integração de login web: Firebase JavaScript SDK, Apache License 2.0.
+https://github.com/firebase/firebase-js-sdk/blob/firebase%4011.10.0/LICENSE
+
+Costa de Ferro 0.10: versões simplificadas do rifle de nisu, da Island Tree 01 e
+do soldado de BAMEN, com as mesmas atribuições acima. As texturas de cenário da
+Poly Haven foram redimensionadas e recomprimidas para a build Android/Web.
+
+Costa de Ferro 0.11: ilustração original do porto gerada para a tela de entrada.
+Hangar, sinalização, céu e interface criados para Operação Zero.
+Tipografia Barlow Condensed, The Barlow Project Authors, SIL Open Font License 1.1.
+https://github.com/jpt/barlow

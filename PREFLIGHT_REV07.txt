@@ -1,0 +1,14 @@
+soldier.glb: blocked
+concrete.jpg: blocked
+asphalt.jpg: blocked
+BLOQUEADO: Assets/Content/Soldier.prefab ausente
+BLOQUEADO: Assets/Content/Rifle.prefab ausente
+BLOQUEADO: Assets/Content/Island.prefab ausente
+BLOQUEADO: Assets/Content/Shot.wav ausente
+BLOQUEADO: Assets/Content/Animations/Idle.anim ausente
+BLOQUEADO: Assets/Content/Animations/Walk.anim ausente
+BLOQUEADO: Assets/Content/Animations/Run.anim ausente
+BLOQUEADO: Assets/Content/Animations/Aim.anim ausente
+BLOQUEADO: Assets/Content/Animations/Fire.anim ausente
+BLOQUEADO: Assets/Content/Animations/Death.anim ausente
+exit=3

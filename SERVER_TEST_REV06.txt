@@ -1,0 +1,6 @@
+=== test_server.py
+PASS: cadastro, login inválido, matchmaking, 2 clientes, disparo, eliminação, respawn, ranking
+=== test_security.py
+PASS: sessão duplicada rejeitada, tiro sem munição bloqueado, recarga, teleporte rejeitado
+=== test_br.py
+PASS: BR 2 clientes, fila, contagem, eliminação sem respawn, vitória, ranking

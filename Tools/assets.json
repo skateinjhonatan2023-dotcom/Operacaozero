@@ -1,0 +1,143 @@
+{
+  "Assets/Content/Coast/Coast_LOD0.fbx": {
+    "bytes": 206972,
+    "sha256": "1aefcde2505031eb85f7a50a55ef6872d747ee3b4e6d39049d1567128288fc10",
+    "source": "https://polyhaven.com/a/coast_rocks_01",
+    "license": "CC0-1.0"
+  },
+  "Assets/Content/Coast/Coast_LOD1.fbx": {
+    "bytes": 59532,
+    "sha256": "d0d89b827da788b33cab9c41db2e6491e9eecff1eb6083cc87c7782fd07ff08b",
+    "source": "https://polyhaven.com/a/coast_rocks_01",
+    "license": "CC0-1.0"
+  },
+  "Assets/Content/Coast/coast_rocks_01_diff_1k.jpg": {
+    "bytes": 839761,
+    "sha256": "a6814ce9c023fc7c90eb38c2afe658a3076b94ed44d136c2dbd3605d18fade7b",
+    "source": "https://polyhaven.com/a/coast_rocks_01",
+    "license": "CC0-1.0"
+  },
+  "Assets/Content/Coast/coast_rocks_01_nor_gl_1k.jpg": {
+    "bytes": 918464,
+    "sha256": "848292bb5fd720fefd37fa94326071bc81e2290bbf409bb019efb6fb30399809",
+    "source": "https://polyhaven.com/a/coast_rocks_01",
+    "license": "CC0-1.0"
+  },
+  "Assets/Content/Quaternius/License-Animations.txt": {
+    "bytes": 318,
+    "sha256": "67e65a88def1ce573211f5cac3f514014abeface8fe48309c010491186b3a89a",
+    "source": "https://quaternius.com/packs/universalanimationlibrary.html",
+    "license": "CC0-1.0"
+  },
+  "Assets/Content/Quaternius/License-Characters.txt": {
+    "bytes": 782,
+    "sha256": "c232257c8a2545520aa120cda96acb23d00a355d2e3339cba20b7ebf56f28a09",
+    "source": "https://quaternius.com/packs/universalbasecharacters.html",
+    "license": "CC0-1.0"
+  },
+  "Assets/Content/Quaternius/Superhero_Male_FullBody.fbx": {
+    "bytes": 826876,
+    "sha256": "79344418d754a59730b79d1874752e9592143db34abe8adf138fa9a92a4768e9",
+    "source": "https://quaternius.com/packs/universalbasecharacters.html",
+    "license": "CC0-1.0"
+  },
+  "Assets/Content/Quaternius/T_Eye_Brown.png": {
+    "bytes": 35958,
+    "sha256": "d08e3356a83211bc6ca21fe3a8e39f4b5c1a3b8f85457fc2c0fb57be09935025",
+    "source": "https://quaternius.com/packs/universalbasecharacters.html",
+    "license": "CC0-1.0"
+  },
+  "Assets/Content/Quaternius/T_Superhero_Male_Dark.png": {
+    "bytes": 1384380,
+    "sha256": "df680cbc1967a61e85998bfafb8f7bc0a36dd604bb3266486c4b06b1a184bb45",
+    "source": "https://quaternius.com/packs/universalbasecharacters.html",
+    "license": "CC0-1.0"
+  },
+  "Assets/Content/Quaternius/T_Superhero_Male_Normal.png": {
+    "bytes": 4252937,
+    "sha256": "9b25cf9200216eb754b79cf4c63b5380c419780788322f3c57cdd2b3e02679a6",
+    "source": "https://quaternius.com/packs/universalbasecharacters.html",
+    "license": "CC0-1.0"
+  },
+  "Assets/Content/Quaternius/UAL1_Standard.fbx": {
+    "bytes": 23754684,
+    "sha256": "21b32d912da3cb93426d974fb945e86f5b2e86970acd2ce89905e0fbf9f1dcc2",
+    "source": "https://quaternius.com/packs/universalanimationlibrary.html",
+    "license": "CC0-1.0"
+  },
+  "Assets/Content/Raw/asphalt.jpg": {
+    "bytes": 3075676,
+    "sha256": "28f5ba8690553f192c0e5e1a5ff40f34765b4b93f4cc7059b1a3e9c795b6c28c",
+    "source": "https://polyhaven.com/a/asphalt_02",
+    "license": "CC0-1.0",
+    "download": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/asphalt_02/asphalt_02_diff_2k.jpg"
+  },
+  "Assets/Content/Raw/concrete.jpg": {
+    "bytes": 2666189,
+    "sha256": "a3eb7b24c5cf6f113ec9b3be8ab1715360ef3cbf4b1699979414e44341f54846",
+    "source": "https://polyhaven.com/a/concrete_wall_008",
+    "license": "CC0-1.0",
+    "download": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/concrete_wall_008/concrete_wall_008_diff_2k.jpg"
+  },
+  "Assets/Content/Raw/grass.jpg": {
+    "bytes": 3787330,
+    "sha256": "4272bddc71a7fa659d1deeb13a9df8c42e68a5ac8cde7523187e4a081e028258",
+    "source": "https://polyhaven.com/a/grass_ground",
+    "license": "CC0-1.0",
+    "download": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/grass_ground/grass_ground_diff_2k.jpg"
+  },
+  "Assets/Content/Shot.wav": {
+    "bytes": 105918,
+    "sha256": "c864b5e866605304789fe60440c45c48a8ff266cadfc628a3fcd99eb80e3f72e",
+    "source": "https://opengameart.org/content/gunshots",
+    "license": "CC0-1.0"
+  },
+  "Assets/Content/Weapon/M4A1-Mobile.fbx": {
+    "bytes": 267852,
+    "sha256": "f2b8d6e1f2c23bb21462bae8633b28372b43fcaf91fc07ec6a339afe7197d81a",
+    "source": "https://opengameart.org/content/m4a1-assault-rifle",
+    "license": "CC0-1.0"
+  },
+  "Assets/Content/Weapon/M4A1.fbx": {
+    "bytes": 278384,
+    "sha256": "d66516a3455b975027556394b9afb92a1e9093d700ccf779aab223cd6ac4076e",
+    "source": "https://opengameart.org/content/m4a1-assault-rifle",
+    "license": "CC0-1.0"
+  },
+  "Assets/Content/Weapon/M4A1_Base_Color.png": {
+    "bytes": 518307,
+    "sha256": "e28fb02a6a1d951ec2d356fad8f267ba04da7d294bfa001eb3995549971e1b34",
+    "source": "https://opengameart.org/content/m4a1-assault-rifle",
+    "license": "CC0-1.0"
+  },
+  "Assets/Content/Weapon/M4A1_Height.png": {
+    "bytes": 11516,
+    "sha256": "df12e21e2c5a8553bb7b5e9bee80477a123f3c5cda5cf55d50d739f69a51b904",
+    "source": "https://opengameart.org/content/m4a1-assault-rifle",
+    "license": "CC0-1.0"
+  },
+  "Assets/Content/Weapon/M4A1_MetalSmooth.png": {
+    "bytes": 2929875,
+    "sha256": "f0429999f52d04af2ced8eeca951e30c26fac04fac83b43d23c172e9e5dc6929",
+    "source": "https://opengameart.org/content/m4a1-assault-rifle",
+    "license": "CC0-1.0"
+  },
+  "Assets/Content/Weapon/M4A1_Metallic.png": {
+    "bytes": 308597,
+    "sha256": "e9cc71ff7886c552030586c650e67c78a86c8b2a812357e40edc19d5bc9426ca",
+    "source": "https://opengameart.org/content/m4a1-assault-rifle",
+    "license": "CC0-1.0"
+  },
+  "Assets/Content/Weapon/M4A1_Normal.png": {
+    "bytes": 973345,
+    "sha256": "9da0b6da232cc676482eeb2b21fdfe04f03504a0e37407f3bbc35556335bd998",
+    "source": "https://opengameart.org/content/m4a1-assault-rifle",
+    "license": "CC0-1.0"
+  },
+  "Assets/Content/Weapon/M4A1_Roughness.png": {
+    "bytes": 1600615,
+    "sha256": "708eff9df647f0ecf258467e983052e164286d1dc579e763a6d8261074d3eb9a",
+    "source": "https://opengameart.org/content/m4a1-assault-rifle",
+    "license": "CC0-1.0"
+  }
+}

@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Operação Zero · Costa de Ferro</title>
+<style>/* FRONT_ASSETS */
+/* GAME_CSS */</style>
+</head>
+<body>
+<canvas id="world" aria-label="Arena 3D"></canvas>
+<div id="flash"></div>
+<section id="account" aria-label="Acesso à Operação Zero">
+  <div class="entry-brand">
+    <div class="command-brand"><i aria-hidden="true"></i><span>OPERAÇÃO <b>ZERO</b></span></div>
+    <h1>Costa de<br><em>Ferro</em></h1>
+  </div>
+  <main class="entry-card">
+    <h2>Entre no jogo</h2>
+    <div class="account-actions">
+      <button id="account-guest" class="primary">Jogar como convidado <span aria-hidden="true">&#8594;</span></button>
+    </div>
+    <details class="online-entry">
+      <summary>Usar conta online</summary>
+      <div class="online-providers">
+        <button id="account-google">Google</button><button id="account-facebook">Facebook</button><button id="account-email" aria-controls="email-form" aria-expanded="false">E-mail</button>
+      </div>
+      <form id="email-form" hidden>
+        <label>E-mail<input type="email" id="account-address" required autocomplete="email"></label>
+        <label>Senha<input type="password" id="account-password" minlength="6" required autocomplete="current-password"></label>
+        <div><button type="submit" value="login">Entrar</button><button type="submit" value="register">Criar conta</button></div>
+      </form>
+      <p id="account-status" role="status"></p>
+    </details>
+    <p class="entry-local">Modo convidado disponível offline</p>
+  </main>
+</section>
+<section id="lobby" aria-label="Central de operações" hidden>
+  <header class="command-top">
+    <div class="command-brand"><i aria-hidden="true"></i><span>OPERAÇÃO <b>ZERO</b></span></div>
+    <div class="command-account">
+      <button id="settings-open">Configurações</button>
+      <div class="command-profile"><span id="profile-label"></span><strong id="credit-count"></strong></div>
+      <button id="account-exit">Sair</button>
+    </div>
+  </header>
+  <nav class="command-nav" aria-label="Equipamentos e itens">
+    <section aria-labelledby="equipment-title">
+      <h2 id="equipment-title">Equipar</h2>
+      <button id="operators-open" data-nav="operator">Operadores</button>
+      <button id="arsenal-open" data-nav="arsenal">Arsenal</button>
+      <button data-collection="inventory" data-nav="inventory">Inventário</button>
+    </section>
+    <section aria-labelledby="rewards-title">
+      <h2 id="rewards-title">Itens e recompensas</h2>
+      <button data-collection="shop" data-nav="shop">Loja</button>
+      <button data-collection="crate" data-nav="crate">Caixas</button>
+      <button data-collection="wheel" data-nav="wheel">Roleta</button>
+    </section>
+  </nav>
+  <div class="showcase-label"><strong id="equipped-operator"></strong><span id="equipped-role"></span></div>
+  <aside class="mission-card" aria-label="Preparar partida">
+    <div class="mission-poster">
+      <span>SOLO OFFLINE</span>
+      <h1>Costa de Ferro</h1>
+    </div>
+    <div class="mission-actions">
+      <label for="room-size">Sala</label><select id="room-size" aria-label="Capacidade da sala"></select>
+      <p id="launch-status" role="status">Carregando a arena 3D…</p>
+      <button id="deploy" class="primary" disabled>Entrar na partida <span aria-hidden="true">&#8594;</span></button>
+    </div>
+  </aside>
+  <div class="command-footer">
+    <details><summary>Créditos</summary><pre><!-- GAME_CREDITS --></pre></details>
+    <small id="lobby-config"></small>
+  </div>
+</section>
+<section id="hud" hidden aria-label="Estado da partida">
+  <div class="match"><b id="alive"></b><span id="clock"></span><span id="kills"></span></div>
+  <div id="deployment" hidden>
+    <div class="deployment-status"><b id="match-stage"></b><span id="deployment-info"></span></div>
+    <button id="deployment-action" class="primary"></button>
+  </div>
+  <canvas id="map" width="144" height="144" aria-label="Minimapa"></canvas>
+  <div id="zone-alert" role="status"></div><div id="district"></div>
+  <div id="crosshair"><i></i><i></i><i></i><i></i></div>
+  <div class="gear"><span id="health"></span><progress id="hp" max="100" value="100"></progress><small id="kits"></small><small id="skill-state" role="status"></small></div>
+  <div class="ammo"><small id="weapon-name">M4A1</small><div><b id="mag"></b> <span id="reserve"></span></div><small id="action"></small></div>
+  <button id="loot" hidden>Coletar</button>
+  <div id="touch">
+    <button id="stick" aria-label="Mover"><span></span></button>
+    <button id="aim" aria-label="Mirar"><b>◎</b>Mira</button>
+    <button id="fire" aria-label="Atirar"><b>⊙</b>Tiro</button>
+    <button id="jump" aria-label="Pular"><b>↑</b>Pular</button>
+    <button id="crouch" aria-label="Agachar"><b>↓</b>Agachar</button>
+    <button id="sprint" aria-label="Correr"><b>»</b>Correr</button>
+    <button id="reload" aria-label="Recarregar"><b>↻</b>Recarga</button>
+    <button id="heal" aria-label="Curar"><b>+</b>Cura</button>
+    <button id="ability" aria-label="Ativar habilidade"><b>✧</b><span id="ability-timer">Pronta</span></button>
+    <button id="throw" aria-label="Arremessar"><b>◇</b><span id="throw-count">0</span></button>
+  </div>
+  <button id="pause" aria-label="Pausar"></button>
+  <button id="throw-type" aria-label="Alternar granada">Granada · 0</button>
+  <button id="weapon-swap" aria-label="Trocar arma">Trocar arma</button>
+  <button id="zip-action" hidden>Usar tirolesa</button>
+</section>
+<section id="result" class="screen" hidden>
+  <main class="intro"><div class="wordmark">COSTA DE FERRO</div><h1 id="outcome"></h1><p id="stats"></p><button id="again" class="primary">Jogar novamente <span>&#8594;</span></button></main>
+</section>
+<section id="settings" class="settings" hidden>
+  <div class="settings-card">
+    <header><div><div class="wordmark">OPERAÇÃO <b>ZERO</b></div><h2>Configurações</h2></div><button id="settings-close">Voltar</button></header>
+    <label>Qualidade gráfica <select id="quality"><option value="low">Baixa</option><option value="medium">Média</option><option value="high">Alta</option><option value="ultra">Ultra</option></select></label>
+    <label>Limite de FPS <select id="fps"><option value="30">30 FPS</option><option value="60">60 FPS</option></select></label>
+    <label>Resolução dinâmica <input type="checkbox" id="adaptive-resolution"></label>
+    <small id="render-resolution"></small>
+    <label>Sensibilidade <input id="sensitivity" type="range" min="0.45" max="2.25" step="0.05"><output id="sensitivity-value"></output></label>
+    <label>Modo de mira <select id="aim-mode"><option value="toggle">Toque para alternar</option><option value="hold">Segure para mirar</option></select></label>
+    <button id="layout-open" class="primary">Editar controles</button>
+    <button id="lobby-back" hidden>Voltar ao painel inicial</button>
+  </div>
+</section>
+<section id="layout-editor" hidden>
+  <div id="editor-controls"></div>
+  <div class="editor-bar">
+    <button id="layout-cancel">Cancelar</button>
+    <div><strong>Layout dos controles</strong><small>Arraste um botão ou selecione para ajustar.</small></div>
+    <button id="layout-save" class="primary">Salvar</button>
+  </div>
+  <div class="editor-options">
+    <label id="control-name" for="control-size"></label><input id="control-size" type="range" min="70" max="150">
+    <label for="control-opacity">Opacidade</label><input id="control-opacity" type="range" min="35" max="100">
+    <button id="layout-reset">Restaurar padrão</button>
+  </div>
+</section>
+<section id="arsenal" class="settings" hidden>
+  <div class="settings-card">
+    <header><div><div class="wordmark">OPERAÇÃO <b>ZERO</b></div><h2>Arsenal</h2></div><button id="arsenal-close">Voltar</button></header>
+    <label>Categoria <select id="weapon-family"></select></label>
+    <label>Arma principal <select id="weapon-select"></select></label>
+    <p id="weapon-description"></p>
+    <label>Segunda arma <select id="weapon-secondary"></select></label>
+    <button id="weapon-confirm" class="primary">Confirmar equipamento</button>
+  </div>
+</section>
+<section id="operators" hidden aria-label="Escolha de operador">
+  <div class="operator-card">
+    <header><div><div class="wordmark">OPERAÇÃO <b>ZERO</b></div><h2>Operadores</h2></div><button id="operators-close">Voltar</button></header>
+    <div id="operator-list" aria-label="Operadores disponíveis"></div>
+    <div class="operator-details"><small id="operator-role"></small><strong id="operator-ability"></strong><p id="operator-description"></p><small id="operator-cooldown"></small></div>
+    <div class="operator-actions"><button id="operator-confirm" class="primary">Selecionar operador</button><button id="operator-inspect" aria-pressed="false">Aproximar</button></div>
+  </div>
+</section>
+<section id="collection" class="settings" hidden>
+  <div class="settings-card">
+    <header><div><div class="wordmark">OPERAÇÃO <b>ZERO</b></div><h2 id="collection-title"></h2></div><button id="collection-close">Voltar</button></header>
+    <small id="collection-balance"></small>
+    <div id="collection-list"></div>
+    <p id="collection-message" role="status"></p>
+  </div>
+</section>
+<!-- GAME_JS -->
+</body>
+</html>

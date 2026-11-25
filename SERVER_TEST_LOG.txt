@@ -1,0 +1,4 @@
+PASS: cadastro, login inválido, matchmaking, 2 clientes, disparo, eliminação, respawn, ranking
+PASS: BR 2 clientes, fila, contagem, eliminação sem respawn, vitória, ranking
+PASS: sessão duplicada rejeitada, tiro sem munição bloqueado, recarga, teleporte rejeitado
+test_exit=0
