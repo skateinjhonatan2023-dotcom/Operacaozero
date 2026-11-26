@@ -44,31 +44,18 @@ internal static class OZLobbyContent
         space.transform.localPosition = Vector3.down * 250;
         var stage = space.AddComponent<OZLobbyStage>();
 
-        var model = (GameObject)PrefabUtility.InstantiatePrefab(Asset<GameObject>("Vigia.fbx"), space.transform);
-        stage.operatorRoot = model.transform;
-        stage.animator = model.GetComponentInChildren<Animator>(true);
-        if (!stage.animator || !model.GetComponentInChildren<SkinnedMeshRenderer>(true))
-            throw new InvalidOperationException("Lobby precisa de operador esquelético com Animator.");
-        stage.animator.applyRootMotion = false;
-        stage.animator.cullingMode = AnimatorCullingMode.AlwaysAnimate;
-        stage.idle = AssetDatabase.LoadAllAssetsAtPath(Model).OfType<AnimationClip>()
-            .FirstOrDefault(clip => !clip.name.StartsWith("__preview__", StringComparison.Ordinal) && clip.length > .4f);
-        if (!stage.idle || stage.idle.legacy)
-            throw new InvalidOperationException("Clipe de apresentação do operador ausente ou inválido.");
-
-        var transforms = model.GetComponentsInChildren<Transform>(true);
-        stage.rifle = transforms.FirstOrDefault(t => t.name == "Vigia_Rifle");
-        if (!stage.rifle || !stage.rifle.GetComponentInChildren<MeshRenderer>(true))
-            throw new InvalidOperationException("Malha de rifle do operador ausente.");
-        var toe = transforms.FirstOrDefault(t => t.name.EndsWith("LeftToeBase", StringComparison.Ordinal));
-        var foot = transforms.FirstOrDefault(t => t.name.EndsWith("LeftFoot", StringComparison.Ordinal));
-        if (!toe || !foot) throw new InvalidOperationException("Rig do operador sem ossos dos pés.");
-        Vector3 front = Vector3.ProjectOnPlane(toe.position - foot.position, Vector3.up);
-        if (front.sqrMagnitude < .0001f) throw new InvalidOperationException("Orientação do operador inválida.");
-        model.transform.rotation = Quaternion.Euler(0, -32, 0) *
-            Quaternion.FromToRotation(front.normalized, Vector3.forward);
-
-        Dress(model, stage.rifle);
+        try
+        {
+            CreateVigia(space.transform, stage);
+            Debug.Log("OZ_BUILD: lobby Vigia validated.");
+        }
+        catch (InvalidOperationException ex)
+        {
+            Debug.LogWarning("OZ_BUILD: Vigia unavailable; using the validated gameplay operator in the lobby. " + ex.Message);
+            if (stage.operatorRoot)
+                UnityEngine.Object.DestroyImmediate(stage.operatorRoot.gameObject);
+            CreateGameplayPortrait(space.transform, stage);
+        }
         var cameraOrigin = Child(space.transform, "Câmera de apresentação", new Vector3(0, 1.24f, 3.05f));
         cameraOrigin.rotation = Quaternion.LookRotation(Vector3.back);
         var camera = stage.cameraView = cameraOrigin.gameObject.AddComponent<Camera>();
@@ -115,6 +102,69 @@ internal static class OZLobbyContent
         foreach (var child in space.GetComponentsInChildren<Transform>(true))
             child.gameObject.layer = PortraitLayer;
         return stage;
+    }
+
+    static void CreateVigia(Transform parent, OZLobbyStage stage)
+    {
+        var model = (GameObject)PrefabUtility.InstantiatePrefab(Asset<GameObject>("Vigia.fbx"), parent);
+        stage.operatorRoot = model.transform;
+        stage.animator = model.GetComponentInChildren<Animator>(true);
+        if (!model.GetComponentInChildren<SkinnedMeshRenderer>(true))
+            throw new InvalidOperationException("Vigia sem malha esquelética importada.");
+        if (!stage.animator)
+            stage.animator = model.AddComponent<Animator>();
+        if (!stage.animator.avatar || !stage.animator.avatar.isValid)
+        {
+            var avatar = AssetDatabase.LoadAllAssetsAtPath(Model).OfType<Avatar>()
+                .FirstOrDefault(a => a.isValid);
+            if (!avatar)
+                throw new InvalidOperationException("Vigia sem Avatar válido para animação.");
+            stage.animator.avatar = avatar;
+        }
+        stage.animator.applyRootMotion = false;
+        stage.animator.cullingMode = AnimatorCullingMode.AlwaysAnimate;
+        stage.idle = AssetDatabase.LoadAllAssetsAtPath(Model).OfType<AnimationClip>()
+            .FirstOrDefault(clip => !clip.name.StartsWith("__preview__", StringComparison.Ordinal) && clip.length > .4f);
+        if (!stage.idle || stage.idle.legacy)
+            throw new InvalidOperationException("Clipe de apresentação do operador ausente ou inválido.");
+
+        var transforms = model.GetComponentsInChildren<Transform>(true);
+        stage.rifle = transforms.FirstOrDefault(t => t.name == "Vigia_Rifle");
+        if (!stage.rifle || !stage.rifle.GetComponentInChildren<MeshRenderer>(true))
+            throw new InvalidOperationException("Malha de rifle do operador ausente.");
+        var toe = transforms.FirstOrDefault(t => t.name.EndsWith("LeftToeBase", StringComparison.Ordinal));
+        var foot = transforms.FirstOrDefault(t => t.name.EndsWith("LeftFoot", StringComparison.Ordinal));
+        if (!toe || !foot) throw new InvalidOperationException("Rig do operador sem ossos dos pés.");
+        Vector3 front = Vector3.ProjectOnPlane(toe.position - foot.position, Vector3.up);
+        if (front.sqrMagnitude < .0001f) throw new InvalidOperationException("Orientação do operador inválida.");
+        model.transform.rotation = Quaternion.Euler(0, -32, 0) *
+            Quaternion.FromToRotation(front.normalized, Vector3.forward);
+
+        Dress(model, stage.rifle);
+    }
+
+    static void CreateGameplayPortrait(Transform parent, OZLobbyStage stage)
+    {
+        // Reuse the same skinned humanoid, materials and animation already validated in gameplay.
+        var model = OZContent.CreateActor();
+        model.transform.SetParent(parent, false);
+        stage.operatorRoot = model.transform;
+        stage.animator = model.GetComponentInChildren<Animator>(true);
+        stage.idle = OZContent.Animation("Idle_Loop");
+        if (!stage.animator || !stage.animator.avatar || !stage.animator.avatar.isValid ||
+            !stage.idle || stage.idle.length <= 0 || stage.idle.legacy ||
+            !model.GetComponentInChildren<SkinnedMeshRenderer>(true))
+            throw new InvalidOperationException("Operador alternativo do lobby sem rig ou animação válida.");
+        stage.animator.applyRootMotion = false;
+        stage.animator.cullingMode = AnimatorCullingMode.AlwaysAnimate;
+        var grip = model.GetComponentsInChildren<Transform>(true)
+            .FirstOrDefault(t => t.name == "WeaponGrip");
+        if (!grip) throw new InvalidOperationException("Operador alternativo sem WeaponGrip.");
+        stage.rifle = OZContent.CreateRifle(grip).transform;
+        if (!stage.rifle.GetComponentInChildren<MeshRenderer>(true))
+            throw new InvalidOperationException("Rifle alternativo do lobby sem malha.");
+        model.transform.localRotation = Quaternion.Euler(0, -32, 0);
+        Debug.Log("OZ_BUILD: gameplay operator fallback validated.");
     }
 
     static Transform Child(Transform parent, string name, Vector3 position)
