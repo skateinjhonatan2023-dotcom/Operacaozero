@@ -51,3 +51,9 @@ bash Tools/build_android.sh
 Para testar o servidor com persistência, instale LegacyServer/requirements.txt e execute LegacyServer/server.py. PORT seleciona a porta, OZ_DB aponta para o SQLite e OZ_COUNTDOWN define a contagem da partida em segundos. Os padrões são 8080, LegacyServer/players.sqlite3 e 10 segundos. O cliente nativo usa o endereço HTTPS em Ajustes para a API de conta e ranking. As partidas Unity continuam locais.
 
 A validação visual da etapa 1 precede a aprovação de dois operadores, armas por categoria e animações de combate. Continuam pendentes os interiores e a vegetação detalhada da Ilha Zero, controles multitoque validados em aparelho, novos sons, inventário completo, avião no modo nativo, melhorias de bots, multiplayer nativo com reconexão, recursos sociais e progressão completa. A UI de compra atual usa créditos de teste e inventário local. As imagens de conceito continuam sendo referências de direção artística.
+
+## Revalidação a partir da entrega
+
+Foi feito um clone novo do bundle publicado, no commit ccd7600. O git fsck, o preflight dos 44 recursos, os testes C# do controlador de resolução e os três testes do servidor passaram nessa restauração. O GitHub retornou acesso administrativo para a conta proprietária e zero instalações visíveis para a integração nesta sessão. O aplicativo público ChatGPT Codex Connector declara permissões de escrita em conteúdo, workflows e pull requests. O endereço de instalação direcionou para o login oficial.
+
+O workflow agora apresenta a validação de fonte em um job próprio e usa um runner hospedado separado para o Editor e o módulo Android do GameCI. Esse runner descarta ferramentas pré-instaladas que o contêiner de build dispensa e registra o espaço antes e depois. A execução remota, a conferência da licença e o teste do APK em aparelho dependem da publicação da branch e da disponibilidade do serviço.
