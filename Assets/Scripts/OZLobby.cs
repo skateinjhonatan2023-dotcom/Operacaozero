@@ -33,6 +33,7 @@ public sealed class OZLobby : MonoBehaviour
     bool renderingLobby;
     string shownResult;
     bool loadedOutfit;
+    int portraitPointer = int.MinValue;
     int shownBalance = -1;
 
     void Start()
@@ -71,6 +72,7 @@ public sealed class OZLobby : MonoBehaviour
 
     void BuildLobby()
     {
+        BuildPortraitControls();
         Picture(Place(safe, "Operação Zero", 23, 42, 308, 95), brand, Color.white);
         var tag = Place(safe, "Versão de teste", 115, 146, 155, 34);
         Picture(tag, goldSprite, Color.white, slice: true);
@@ -108,6 +110,45 @@ public sealed class OZLobby : MonoBehaviour
         play = ui.Button(safe, "", -343, -113, 320, 83, Deploy, true, anchor: RightBottom);
         Picture(Place(play.transform, "Ícone jogar", 51, 22, 41, 41), playIcon, Ink);
         ui.Label(play.transform, "JOGAR", 90, 0, 172, 83, 52, Ink, TextAnchor.MiddleCenter, slanted: true);
+    }
+
+    void BuildPortraitControls()
+    {
+        if (!stage || !stage.operatorRoot) return;
+        // Sibling behind all navigation and dialog controls; only the central space receives drag.
+        var region = Layer(safe, "Girar operador 3D");
+        region.anchorMin = new Vector2(.5f, .5f);
+        region.anchorMax = region.anchorMin;
+        region.pivot = new Vector2(.5f, .5f);
+        region.sizeDelta = new Vector2(480, 470);
+        region.anchoredPosition = new Vector2(0, -5);
+        Picture(region, null, Invisible, hit: true);
+        var events = region.gameObject.AddComponent<EventTrigger>();
+        void Bind(EventTriggerType type, Action<PointerEventData> callback)
+        {
+            var entry = new EventTrigger.Entry { eventID = type };
+            entry.callback.AddListener(data => { if (data is PointerEventData pointer) callback(pointer); });
+            events.triggers.Add(entry);
+        }
+        Bind(EventTriggerType.BeginDrag, p =>
+        {
+            if (!dialog && portraitPointer == int.MinValue) portraitPointer = p.pointerId;
+        });
+        Bind(EventTriggerType.Drag, p =>
+        {
+            if (portraitPointer == p.pointerId && !dialog && stage)
+                stage.RotateOperator(-p.delta.x / Mathf.Max(.01f, canvas.scaleFactor) * .75f);
+        });
+        Bind(EventTriggerType.EndDrag, p => { if (portraitPointer == p.pointerId) portraitPointer = int.MinValue; });
+        Bind(EventTriggerType.PointerUp, p => { if (portraitPointer == p.pointerId) portraitPointer = int.MinValue; });
+        var hint = Place(safe, "Orientação do operador", -135, -72, 270, 42, new Vector2(.5f, 0));
+        ui.Label(hint, "ARRASTE PARA GIRAR • 360°", 0, 0, 270, 42, 18, Muted, TextAnchor.MiddleCenter);
+        ui.Button(safe, "CENTRALIZAR", -78, -119, 156, 38, stage.ResetOrientation, size: 17, anchor: new Vector2(.5f, 0));
+    }
+
+    void OnApplicationFocus(bool focus)
+    {
+        if (!focus) portraitPointer = int.MinValue;
     }
 
     void BuildAccount()
@@ -163,6 +204,7 @@ public sealed class OZLobby : MonoBehaviour
         if (renderingLobby != shouldShow)
         {
             renderingLobby = shouldShow;
+            portraitPointer = int.MinValue;
             canvas.gameObject.SetActive(shouldShow);
             if (stage) stage.gameObject.SetActive(shouldShow);
             if (game.view) game.view.enabled = !shouldShow || !stage;
@@ -297,6 +339,7 @@ public sealed class OZLobby : MonoBehaviour
     RectTransform OpenDialog(string title, string caption, bool closeable = true)
     {
         CloseDialog();
+        portraitPointer = int.MinValue;
         dialog = Layer(safe, title);
         Picture(dialog, null, new Color(.015f, .019f, .025f, .68f), hit: true);
         var shell = ui.Panel(dialog, title + " • Painel", -260, -248, 520, 496, new Vector2(.5f, .5f));

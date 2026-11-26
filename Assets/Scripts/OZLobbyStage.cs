@@ -15,10 +15,21 @@ public sealed class OZLobbyStage : MonoBehaviour
     PlayableGraph graph;
     AnimationClipPlayable motion;
     float aspect;
+    Quaternion initialOrientation;
+    float targetYaw, currentYaw;
+
+    public void RotateOperator(float deltaDegrees)
+    {
+        if (operatorRoot) targetYaw = Mathf.Repeat(targetYaw + deltaDegrees + 180f, 360f) - 180f;
+    }
+
+    public void ResetOrientation() => targetYaw = 0f;
 
     void OnEnable()
     {
-        if (!animator || !idle) return;
+        if (operatorRoot) initialOrientation = operatorRoot.localRotation;
+        targetYaw = currentYaw = 0f;
+        if (!animator || !idle || idle.length <= 0f) return;
         graph = PlayableGraph.Create("Vigia • Lobby");
         motion = AnimationClipPlayable.Create(graph, idle);
         var output = AnimationPlayableOutput.Create(graph, "Vigia", animator);
@@ -28,7 +39,12 @@ public sealed class OZLobbyStage : MonoBehaviour
 
     void LateUpdate()
     {
-        if (graph.IsValid() && motion.GetTime() >= idle.length)
+        if (operatorRoot)
+        {
+            currentYaw = Mathf.LerpAngle(currentYaw, targetYaw, 1f - Mathf.Exp(-20f * Time.unscaledDeltaTime));
+            operatorRoot.localRotation = Quaternion.AngleAxis(currentYaw, Vector3.up) * initialOrientation;
+        }
+        if (graph.IsValid() && motion.IsValid() && idle && idle.length > 0f && motion.GetTime() >= idle.length)
             motion.SetTime(motion.GetTime() % idle.length);
         if (!backdrop || !backdropTexture || !cameraView || Mathf.Approximately(aspect, cameraView.aspect)) return;
 
@@ -43,6 +59,7 @@ public sealed class OZLobbyStage : MonoBehaviour
     void OnDisable()
     {
         if (graph.IsValid()) graph.Destroy();
+        if (operatorRoot) operatorRoot.localRotation = initialOrientation;
     }
 
     internal void Apply(OZLobbyInventory inventory)

@@ -14,7 +14,6 @@ internal static class OZLobbyContent
 
     internal static void Install(GameObject root, OZGame game)
     {
-        ConfigureModel();
         ConfigureTexture("Costa.jpg", TextureImporterType.Default, 2048, mipmaps: true);
         ConfigureTexture("Weave.png", TextureImporterType.Default, 128, mipmaps: true);
         ConfigureTexture("Weave-Normal.png", TextureImporterType.NormalMap, 128, mipmaps: true);
@@ -46,23 +45,35 @@ internal static class OZLobbyContent
 
         try
         {
+            ConfigureModel();
             CreateVigia(space.transform, stage);
             Debug.Log("OZ_BUILD: lobby Vigia validated.");
         }
-        catch (InvalidOperationException ex)
+        catch (Exception ex)
         {
             Debug.LogWarning("OZ_BUILD: Vigia unavailable; using the validated gameplay operator in the lobby. " + ex.Message);
             if (stage.operatorRoot)
                 UnityEngine.Object.DestroyImmediate(stage.operatorRoot.gameObject);
+            stage.operatorRoot = null;
+            stage.animator = null;
+            stage.idle = null;
+            stage.rifle = null;
             CreateGameplayPortrait(space.transform, stage);
         }
-        var cameraOrigin = Child(space.transform, "Câmera de apresentação", new Vector3(0, 1.24f, 3.05f));
+        // Frame the entire skinned operator with room for a full rotation.
+        var meshes = stage.operatorRoot.GetComponentsInChildren<SkinnedMeshRenderer>(true);
+        var bounds = meshes[0].bounds;
+        foreach (var mesh in meshes) bounds.Encapsulate(mesh.bounds);
+        float height = Mathf.Clamp(bounds.size.y, 1.5f, 3f);
+        float centerY = Mathf.Clamp(bounds.center.y - space.transform.position.y, .65f, 1.65f);
+        float distance = Mathf.Max(3.4f, height * 1.75f);
+        var cameraOrigin = Child(space.transform, "Câmera de apresentação", new Vector3(0, centerY, distance));
         cameraOrigin.rotation = Quaternion.LookRotation(Vector3.back);
         var camera = stage.cameraView = cameraOrigin.gameObject.AddComponent<Camera>();
         camera.clearFlags = CameraClearFlags.SolidColor;
         camera.backgroundColor = new Color(.04f, .06f, .08f);
         camera.cullingMask = PortraitMask;
-        camera.fieldOfView = 26;
+        camera.fieldOfView = 38;
         camera.nearClipPlane = .12f;
         camera.farClipPlane = 32;
         camera.allowHDR = false;
@@ -106,10 +117,11 @@ internal static class OZLobbyContent
 
     static void CreateVigia(Transform parent, OZLobbyStage stage)
     {
-        var model = (GameObject)PrefabUtility.InstantiatePrefab(Asset<GameObject>("Vigia.fbx"), parent);
+        var model = PrefabUtility.InstantiatePrefab(Asset<GameObject>("Vigia.fbx"), parent) as GameObject;
+        if (!model) throw new InvalidOperationException("Não foi possível instanciar Vigia.");
         stage.operatorRoot = model.transform;
         stage.animator = model.GetComponentInChildren<Animator>(true);
-        if (!model.GetComponentInChildren<SkinnedMeshRenderer>(true))
+        if (!model.GetComponentsInChildren<SkinnedMeshRenderer>(true).Any(m => m.sharedMesh && m.sharedMesh.vertexCount > 0 && m.bones.Length > 0))
             throw new InvalidOperationException("Vigia sem malha esquelética importada.");
         if (!stage.animator)
             stage.animator = model.AddComponent<Animator>();
@@ -121,6 +133,8 @@ internal static class OZLobbyContent
                 throw new InvalidOperationException("Vigia sem Avatar válido para animação.");
             stage.animator.avatar = avatar;
         }
+        if (!stage.animator.avatar.isHuman)
+            Debug.LogWarning("OZ_BUILD: Vigia uses its authored Generic rig; Humanoid conversion pending.");
         stage.animator.applyRootMotion = false;
         stage.animator.cullingMode = AnimatorCullingMode.AlwaysAnimate;
         stage.idle = AssetDatabase.LoadAllAssetsAtPath(Model).OfType<AnimationClip>()
