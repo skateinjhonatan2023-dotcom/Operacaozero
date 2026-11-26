@@ -161,6 +161,14 @@ public static class OZBuild
         if (!mesh.Any(r => r.sharedMesh && r.sharedMesh.vertexCount > 0 && r.bones.Length > 0) ||
             !game.rifle.GetComponentsInChildren<MeshFilter>(true).Any(f => f.sharedMesh && f.sharedMesh.vertexCount > 0))
             throw new InvalidOperationException("Operador ou arma sem geometria importada.");
+        var stage = lobby.stage;
+        if (!stage.operatorRoot || !stage.cameraView || !stage.rifle ||
+            !stage.animator.avatar || !stage.animator.avatar.isValid || stage.idle.legacy || stage.idle.length <= 0 ||
+            !stage.operatorRoot.GetComponentsInChildren<SkinnedMeshRenderer>(true)
+                .Any(r => r.sharedMesh && r.sharedMesh.vertexCount > 0 && r.bones.Length > 0))
+            throw new InvalidOperationException("Operador do lobby sem geometria, Avatar ou animação válida.");
+        if (!stage.rifle.GetComponentsInChildren<MeshRenderer>(true).Any())
+            throw new InvalidOperationException("Arma do lobby sem renderer.");
         Debug.Log("Operation Zero: referências do motor, cena, operador e rifle validadas.");
     }
 

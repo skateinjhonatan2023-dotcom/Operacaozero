@@ -11,7 +11,10 @@ public sealed class OZGame : MonoBehaviour {
  public bool LeftShoulder;
  readonly RaycastHit[] cameraHits = new RaycastHit[32];
  readonly Collider[] headHits = new Collider[24];
- Vector3 slideDirection; public bool Aim, Sprint, Crouch; public Vector2 Move,Look; public bool Trigger,Jump,Reload,Slide; public bool FPS;
+ Vector3 slideDirection;
+ SkinnedMeshRenderer[] playerBody;
+ UnityEngine.Rendering.ShadowCastingMode[] bodyShadowModes;
+ bool bodyHidden; public bool Aim, Sprint, Crouch; public Vector2 Move,Look; public bool Trigger,Jump,Reload,Slide; public bool FPS;
  public bool HealRequested;
  public bool LootRequested;
  public int Medkits { get; private set; }
@@ -33,7 +36,7 @@ public sealed class OZGame : MonoBehaviour {
  public int Weapon { get; private set; } public int Ammo=>ammo[Weapon]; public int Reserve=>reserve[Weapon]; public string WeaponName=>names[Weapon]; public int XP=>PlayerPrefs.GetInt("OZ_XP",0);
  readonly string[] names={"Rifle","SMG","Sniper","Pistola"};readonly int[] capacity={30,24,5,12},damage={34,24,95,30};readonly float[] rate={.13f,.08f,.85f,.24f},reach={100,65,220,45}; readonly int[] ammo={30,24,5,12},reserve={120,144,25,72};
  float yaw,pitch=8,vy,nextShot,reloadUntil,slideUntil,startTime; int reloadWeapon; CharacterController cc; AudioSource audioSource; bool finished;
- void Start(){if(!view)view=Camera.main;SetFrameRate(PlayerPrefs.GetInt("OZ_FPS",30));SetQuality(PlayerPrefs.GetInt("OZ_QUALITY",0));Sensitivity=PlayerPrefs.GetFloat("OZ_SENS",1);AdsSensitivity=Mathf.Clamp(PlayerPrefs.GetFloat("OZ_ADS_SENS",.65f),.2f,3f);audioSource=gameObject.AddComponent<AudioSource>();shotEffects=gameObject.AddComponent<OZShotEffects>();shotEffects.Initialize(effectsMaterial);if(!soldier||!rifle||!shotSound||!view||spawns==null||spawns.Length<8){Result="Conteúdo gráfico obrigatório ausente";enabled=false;return;} Player=Spawn(spawns[0].position);cc=Player.GetComponent<CharacterController>();Player.Pose(0,false);UpdateCamera(true);}
+ void Start(){if(!view)view=Camera.main;SetFrameRate(PlayerPrefs.GetInt("OZ_FPS",30));SetQuality(PlayerPrefs.GetInt("OZ_QUALITY",0));Sensitivity=PlayerPrefs.GetFloat("OZ_SENS",1);AdsSensitivity=Mathf.Clamp(PlayerPrefs.GetFloat("OZ_ADS_SENS",.65f),.2f,3f);audioSource=gameObject.AddComponent<AudioSource>();shotEffects=gameObject.AddComponent<OZShotEffects>();shotEffects.Initialize(effectsMaterial);if(!soldier||!rifle||!shotSound||!view||spawns==null||spawns.Length<8){Result="Conteúdo gráfico obrigatório ausente";enabled=false;return;} Player=Spawn(spawns[0].position);cc=Player.GetComponent<CharacterController>();playerBody=Player.GetComponentsInChildren<SkinnedMeshRenderer>(true);bodyShadowModes=new UnityEngine.Rendering.ShadowCastingMode[playerBody.Length];for(int i=0;i<playerBody.Length;i++)bodyShadowModes[i]=playerBody[i].shadowCastingMode;Player.Pose(0,false);UpdateCamera(true);}
  OZActor Spawn(Vector3 pos){var a=Instantiate(soldier,pos,Quaternion.identity);a.gameObject.SetActive(true);a.Setup();var ctrl=a.GetComponent<CharacterController>()??a.gameObject.AddComponent<CharacterController>();ctrl.enabled=true;ctrl.height=1.8f;ctrl.center=Vector3.up*.9f;ctrl.radius=.33f;return a;}
  public void Begin(Mode m){if(Playing||finished||!Player)return;mode=m;Playing=true;startTime=Time.time;for(int i=1;i<Mathf.Min(spawns.Length,m==Mode.Combate?5:13);i++){var a=Spawn(spawns[i].position);a.gameObject.AddComponent<OZBot>().Init(this,a);bots.Add(a);}
  SpawnLoot();
@@ -191,6 +194,7 @@ public sealed class OZGame : MonoBehaviour {
   return pivot+direction*distance;
  }
  void UpdateCamera(bool instant) {
+  SetFirstPersonBody(FPS);
   Vector3 pivot=Player.transform.position+Vector3.up*(cc&&cc.height<1.5f?1.1f:1.65f);
   Quaternion q=Quaternion.Euler(pitch,yaw,0);
   Vector3 offset=FPS?Vector3.zero:q*new Vector3(LeftShoulder?-.65f:.65f,.18f,Aim?-2.3f:-4.3f);
@@ -198,6 +202,12 @@ public sealed class OZGame : MonoBehaviour {
   Vector3 position=instant||FPS?target:SafeCameraPosition(pivot,Vector3.Lerp(view.transform.position,target,1f-Mathf.Exp(-18f*Time.deltaTime)));
   view.transform.SetPositionAndRotation(position,q);
   view.fieldOfView=Mathf.Lerp(view.fieldOfView,Aim?45:65,1f-Mathf.Exp(-10f*Time.deltaTime));
+ }
+ void SetFirstPersonBody(bool hide) {
+  if(bodyHidden==hide||playerBody==null)return;
+  bodyHidden=hide;
+  for(int i=0;i<playerBody.Length;i++)
+   if(playerBody[i])playerBody[i].shadowCastingMode=hide?UnityEngine.Rendering.ShadowCastingMode.ShadowsOnly:bodyShadowModes[i];
  }
  void Shoot() {
   ammo[Weapon]--;
@@ -295,7 +305,7 @@ public sealed class OZGame : MonoBehaviour {
   graphicsBudget.ResetWindow();
   PlayerPrefs.SetInt("OZ_FPS", Application.targetFrameRate);
  }
- void Finish(bool win){if(finished)return;Player.Pose(0,false);finished=true;Playing=false;Result=win?"VITÓRIA":"ELIMINADO";PlayerPrefs.SetInt("OZ_XP",XP+Kills*100+(win?300:0));PlayerPrefs.Save();}
+ void Finish(bool win){if(finished)return;SetFirstPersonBody(false);Player.Pose(0,false);finished=true;Playing=false;Result=win?"VITÓRIA":"ELIMINADO";PlayerPrefs.SetInt("OZ_XP",XP+Kills*100+(win?300:0));PlayerPrefs.Save();}
  public void SetQuality(int level) {
   level=Mathf.Clamp(level,0,3);
   if (!activeQuality && UnityEngine.Rendering.GraphicsSettings.currentRenderPipeline is UniversalRenderPipelineAsset source) {

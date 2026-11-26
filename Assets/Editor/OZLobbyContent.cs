@@ -80,6 +80,24 @@ internal static class OZLobbyContent
         camera.allowMSAA = false;
         gameCamera.cullingMask &= ~PortraitMask;
 
+        // Physical stage foreground using existing licensed PBR surfaces.
+        // Keep the original panorama as distant scenery until a full environment is imported.
+        var floor = GameObject.CreatePrimitive(PrimitiveType.Plane);
+        floor.name = "Piso de concreto do hangar";
+        floor.transform.SetParent(space.transform, false);
+        floor.transform.localPosition = new Vector3(0, -.025f, 0);
+        floor.transform.localScale = new Vector3(.8f, 1, .8f);
+        UnityEngine.Object.DestroyImmediate(floor.GetComponent<Collider>());
+        var floorMaterial = Material("Lobby-Floor", "Universal Render Pipeline/Lit");
+        floorMaterial.SetTexture("_BaseMap", AssetDatabase.LoadAssetAtPath<Texture2D>("Assets/Content/Raw/concrete.jpg"));
+        floorMaterial.SetTexture("_BumpMap", AssetDatabase.LoadAssetAtPath<Texture2D>("Assets/Content/Raw/concrete-normal.jpg"));
+        floorMaterial.SetTextureScale("_BaseMap", Vector2.one * 4);
+        floorMaterial.SetTextureScale("_BumpMap", Vector2.one * 4);
+        floorMaterial.EnableKeyword("_NORMALMAP");
+        floorMaterial.SetFloat("_Smoothness", .18f);
+        EditorUtility.SetDirty(floorMaterial);
+        floor.GetComponent<MeshRenderer>().sharedMaterial = floorMaterial;
+
         var background = GameObject.CreatePrimitive(PrimitiveType.Quad);
         background.name = "Painel panorâmico";
         background.transform.SetParent(space.transform, false);
