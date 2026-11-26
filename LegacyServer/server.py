@@ -147,5 +147,32 @@ async def asset(req):
  n=req.match_info['name']
  if n not in ['engine.js','visuals.js','game.js','lobby.js','online.js','lobby.css','graphics.js','manifest.webmanifest','sw.js','icon.svg']:raise web.HTTPNotFound()
  return web.FileResponse(ROOT/n)
-app=web.Application(client_max_size=8192);app.router.add_get('/',index);app.router.add_post('/api/auth',auth);app.router.add_get('/api/ranking',ranking);app.router.add_get('/ws',match);app.router.add_static('/assets', ROOT/'assets');app.router.add_get('/{name}',asset);app.on_startup.append(startup);app.on_cleanup.append(cleanup)
+# The standalone REV07 deployment may supply its own assets. A source checkout
+# shares the same licensed meshes and textures with the packaged clients.
+BUNDLED_ASSETS = {
+    'soldier.glb': ROOT.parent / 'WebGame/assets/soldier.glb',
+    'asphalt.jpg': ROOT.parent / 'Assets/Content/Raw/asphalt.jpg',
+    'concrete.jpg': ROOT.parent / 'Assets/Content/Raw/concrete.jpg',
+}
+
+async def graphics_asset(request):
+    name = request.path.rsplit('/', 1)[-1]
+    custom = ROOT / 'assets' / name
+    path = custom if custom.is_file() else BUNDLED_ASSETS[name]
+    if not path.is_file():
+        raise web.HTTPNotFound()
+    return web.FileResponse(path)
+
+app = web.Application(client_max_size=8192)
+app.router.add_get('/', index)
+app.router.add_post('/api/auth', auth)
+app.router.add_get('/api/ranking', ranking)
+app.router.add_get('/ws', match)
+for filename in BUNDLED_ASSETS:
+    app.router.add_get('/assets/' + filename, graphics_asset)
+if (ROOT / 'assets').is_dir():
+    app.router.add_static('/assets', ROOT / 'assets')
+app.router.add_get('/{name}', asset)
+app.on_startup.append(startup)
+app.on_cleanup.append(cleanup)
 if __name__=='__main__':web.run_app(app,host='0.0.0.0',port=int(os.environ.get('PORT',8080)))
