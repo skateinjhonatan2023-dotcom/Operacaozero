@@ -180,8 +180,8 @@ public static class OZBuild
         Prepare();
         ValidateSavedScene();
         PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.Android, "com.operationzero.game");
-        PlayerSettings.bundleVersion = "0.6";
-        PlayerSettings.Android.bundleVersionCode = 6;
+        PlayerSettings.bundleVersion = "0.7";
+        PlayerSettings.Android.bundleVersionCode = 7;
         PlayerSettings.Android.minSdkVersion = AndroidSdkVersions.AndroidApiLevel26;
         PlayerSettings.Android.targetArchitectures = AndroidArchitecture.ARM64;
         PlayerSettings.SetScriptingBackend(NamedBuildTarget.Android, ScriptingImplementation.IL2CPP);
