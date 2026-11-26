@@ -540,7 +540,7 @@ public sealed class OZLobby : MonoBehaviour
     void OpenNotes()
     {
         var panel = OpenDialog("ATUALIZAÇÃO V0.7", "Ilha Zero • Unity");
-        ui.Label(panel, "Rotação 360° e enquadramento 3D.\nSensibilidade ADS e troca de ombro.\nVersão em desenvolvimento; testes pendentes.",
+        ui.Label(panel, "Ilha Zero • 2 km, até 19 bots.\nVeículos e granadas experimentais.\nVersão em desenvolvimento; testes pendentes.",
             25, 128, 470, 170, 24, White, TextAnchor.UpperLeft);
         ui.Button(panel, "CRÉDITOS E LICENÇAS", 25, 369, 470, 53, OpenCredits);
     }

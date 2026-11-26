@@ -127,6 +127,7 @@ internal static class OZIsland
                 Warehouse(region,terrain,center+new Vector3(-55,0,-40),concrete);
                 Warehouse(region,terrain,center+new Vector3(55,0,-40),concrete);
                 Block(region,"Torre de controle",center+new Vector3(65,5,-12),new Vector3(6,10,6),metal);
+                for(int k=0;k<12;k++)Block(region,"Marcação de pista",runway+new Vector3(-72+k*13,.085f,0),new Vector3(5,.025f,.35f),Solid("RunwayPaint",new Color(.85f,.84f,.76f)));
             }
             else
             {
@@ -157,7 +158,7 @@ internal static class OZIsland
             var site=Districts[i<3?1:i==3?2:i==4?3:5];
             var pos=new Vector3(site.x+30+i*5,0,site.y+30);pos.y=Height(terrain,pos)+.15f;
             var car=new GameObject(i%3==0?"Jipe":i%3==1?"Buggy":"Motocicleta");car.transform.SetParent(parent,false);car.transform.position=pos;
-            float width=i%3==2?.7f:1.7f,length=i%3==2?2.1f:3.6f;
+            float width=i%3==2 ? .7f : 1.7f,length=i%3==2?2.1f:3.6f;
             var chassis=GameObject.CreatePrimitive(PrimitiveType.Cube);chassis.transform.SetParent(car.transform,false);chassis.transform.localPosition=Vector3.up*.75f;chassis.transform.localScale=new Vector3(width,.55f,length);chassis.GetComponent<Renderer>().sharedMaterial=body;UnityEngine.Object.DestroyImmediate(chassis.GetComponent<Collider>());
             int wheels=i%3==2?2:4;
             for(int k=0;k<wheels;k++){var wheel=GameObject.CreatePrimitive(PrimitiveType.Cylinder);wheel.transform.SetParent(car.transform,false);wheel.transform.localPosition=new Vector3(wheels==2?0:(k%2==0?-1:1)*width*.5f,.38f,(k<wheels/2?-1:1)*length*.37f);wheel.transform.localRotation=Quaternion.Euler(0,0,90);wheel.transform.localScale=new Vector3(.7f,.14f,.7f);wheel.GetComponent<Renderer>().sharedMaterial=tire;UnityEngine.Object.DestroyImmediate(wheel.GetComponent<Collider>());}
@@ -185,7 +186,10 @@ internal static class OZIsland
             int t=i*6,j=i*2; tris[t]=j;tris[t+1]=j+1;tris[t+2]=j+2;tris[t+3]=j+1;tris[t+4]=j+3;tris[t+5]=j+2;
         }
         var mesh=new Mesh {name="Estrada conformada",vertices=v,uv=uv,triangles=tris};mesh.RecalculateNormals();mesh.RecalculateBounds();
-        string path=AssetDatabase.GenerateUniqueAssetPath(Generated+"IlhaRoad.asset");AssetDatabase.CreateAsset(mesh,path);
+        string path=Generated+FormattableString.Invariant($"IlhaRoad_{a.x}_{a.y}_{b.x}_{b.y}.asset");
+        var existing=AssetDatabase.LoadAssetAtPath<Mesh>(path);
+        if(existing){EditorUtility.CopySerialized(mesh,existing);UnityEngine.Object.DestroyImmediate(mesh);mesh=existing;EditorUtility.SetDirty(mesh);}
+        else AssetDatabase.CreateAsset(mesh,path);
         root.gameObject.AddComponent<MeshFilter>().sharedMesh=mesh;
         root.gameObject.AddComponent<MeshRenderer>().sharedMaterial=material;
         // Terrain provides collision underneath.
@@ -241,8 +245,10 @@ internal static class OZIsland
         Block(root.transform, "Parede de fundo", site + new Vector3(0, 1.8f, 3.9f), new Vector3(11, 3.6f, .2f), concrete);
         foreach (int side in new[] { -1, 1 })
         {
-            Block(root.transform, "Parede lateral", site + new Vector3(side * 5.35f, 1.8f, 0),
-                new Vector3(.3f, 3.6f, 8), concrete);
+            // Separate sections leave two real window apertures per wall.
+            Block(root.transform, "Peitoril", site + new Vector3(side * 5.35f,.55f,0),new Vector3(.3f,1.1f,8),concrete);
+            Block(root.transform, "Verga", site + new Vector3(side * 5.35f,3f,0),new Vector3(.3f,1.2f,8),concrete);
+            for(int k=-1;k<=1;k++)Block(root.transform,"Pilar",site+new Vector3(side*5.35f,1.9f,k*3.6f),new Vector3(.3f,1.6f,k==0?1.6f:.8f),concrete);
             Block(root.transform, "Frente", site + new Vector3(side * 3.7f, 1.8f, -3.9f),
                 new Vector3(3.3f, 3.6f, .3f), concrete);
         }

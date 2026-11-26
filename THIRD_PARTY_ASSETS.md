@@ -10,3 +10,10 @@ Inventário original detalhado: [LICENCAS-ASSETS.md](LICENCAS-ASSETS.md), [Tools
 - Sketchfab, BAMEN: https://sketchfab.com/3d-models/free-military-soldier-female-warrior-rigged-ba5ad50a7a2f457a8b5ed7a84328027f (CC Attribution indicada na página); arquivo FBX/GLB, texturas e licença individual ainda precisam ser obtidos e validados. Nenhum login/download foi tentado. Não afirmar integração.
 
 Não extrair recursos proprietários de jogos de referência.
+
+## Pesquisa adicional — candidatos não importados
+- RedVeil studio (matheofrelin3), AMERICAN SOLDIER RIGGED, CC Attribution indicada: https://sketchfab.com/3d-models/american-soldier-rigged-5b1967e7f83547be8a1c3ae656ab1ad4 — download, verificação do autor, texturas e rig pendentes.
+- ambientCG, Metal 052 C (CC0): https://ambientcg.com/view?id=Metal052C — download e importação pendentes.
+- Poly Haven, Hangar Interior (CC0): https://polyhaven.com/a/hangar_interior — HDRI candidato, não importado.
+- Quaternius, Survival Pack (CC0): https://quaternius.com/packs/survival.html — seleção e importação pendentes.
+A segunda etapa reutiliza os recursos já versionados e gera geometria original via código. Nenhum novo binário de terceiro foi adicionado.

@@ -276,7 +276,7 @@ public sealed class OZGame : MonoBehaviour {
   Player.Fire();
   audioSource.PlayOneShot(shotSound,.65f);
 
-  Vector2 spread=Random.insideUnitCircle*(Weapon==4?.035f:Aim?.0025f:.009f);
+  Vector2 spread=Random.insideUnitCircle*(Weapon==4 ? .035f : Aim ? .0025f : .009f);
   Ray cameraRay=view.ViewportPointToRay(new Vector3(.5f+spread.x,.5f+spread.y));
   Vector3 target=NearestHit(cameraRay,reach[Weapon],out var sightHit)
    ? sightHit.point : cameraRay.GetPoint(reach[Weapon]);
@@ -297,7 +297,7 @@ public sealed class OZGame : MonoBehaviour {
    } else target=shotRay.GetPoint(distance);
    shotEffects.Show(origin,target);
   }
-  pitch=Mathf.Clamp(pitch-(Weapon==2?2.8f:Weapon==4?2.2f:Weapon==1?.65f:1.1f),-65,65);
+  pitch=Mathf.Clamp(pitch-(Weapon==2?2.8f:Weapon==4?2.2f:Weapon==1 ? .65f:1.1f),-65,65);
  }
  bool NearestHit(Ray ray,float range,out RaycastHit nearest) {
   nearest=default;
