@@ -33,3 +33,5 @@ jobs:
           if not isinstance(data, dict):
               raise SystemExit("Unexpected Unity response")
           print(json.dumps({k:data.get(k) for k in ("build","buildStatus","lastBuiltRevision","requestedRevision","unityVersion","finished")}, ensure_ascii=True))
+
+# Refresh status of build 5 on user request.
