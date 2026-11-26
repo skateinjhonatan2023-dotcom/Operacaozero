@@ -163,7 +163,7 @@ internal static class OZIsland
                 v[i*2+k]=point; uv[i*2+k]=new Vector2(k*2.5f,i*2.6f);
             }
             if(i==steps)continue;
-            int t=i*6,j=i*2; tris[t]=j;tris[t+1]=j+2;tris[t+2]=j+1;tris[t+3]=j+1;tris[t+4]=j+2;tris[t+5]=j+3;
+            int t=i*6,j=i*2; tris[t]=j;tris[t+1]=j+1;tris[t+2]=j+2;tris[t+3]=j+1;tris[t+4]=j+3;tris[t+5]=j+2;
         }
         var mesh=new Mesh {name="Estrada conformada",vertices=v,uv=uv,triangles=tris};mesh.RecalculateNormals();mesh.RecalculateBounds();
         string path=AssetDatabase.GenerateUniqueAssetPath(Generated+"IlhaRoad.asset");AssetDatabase.CreateAsset(mesh,path);
@@ -230,6 +230,7 @@ internal static class OZIsland
         var hinge = new GameObject("Porta interativa").transform;
         hinge.SetParent(root.transform,false); hinge.position=site+new Vector3(-2.05f,0,-4f);
         var door=Block(hinge,"Folha",hinge.position+new Vector3(1.05f,1.15f,0),new Vector3(2.1f,2.3f,.12f),concrete);
+        GameObjectUtility.SetStaticEditorFlags(door.gameObject,0);
         hinge.gameObject.AddComponent<OZDoor>();
     }
 

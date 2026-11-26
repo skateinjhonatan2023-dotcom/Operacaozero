@@ -14,7 +14,7 @@ public sealed class OZLobby : MonoBehaviour
     public Sprite panelSprite, goldSprite, brand, skins, weapons, kits, news, playIcon;
 
     readonly string[] modes = { "BATTLE ROYALE", "COMBATE", "TREINAMENTO" };
-    readonly string[] modeDetails = { "Solo • 12 bots", "Solo • 4 bots", "Prática offline" };
+    readonly string[] modeDetails = { "Solo • até 19 bots", "Solo • 4 bots", "Prática offline" };
 
     OZAccount account;
     OZLobbyInventory inventory;
@@ -98,9 +98,9 @@ public sealed class OZLobby : MonoBehaviour
         BuildShop();
 
         var notes = ui.Panel(safe, "Atualização", 23, -132, 320, 103, LeftBottom);
-        Picture(Place(notes, "Costa de Ferro", 8, 8, 105, 86), news, Color.white);
+        Picture(Place(notes, "Ilha Zero", 8, 8, 105, 86), news, Color.white);
         ui.Label(notes, "ATUALIZAÇÃO V0.7", 123, 6, 188, 27, 23, Gold, slanted: true);
-        ui.Label(notes, "Rotação, câmera e controles\nCosta de Ferro", 123, 34, 180, 53, 19, Muted);
+        ui.Label(notes, "Ilha Zero • 2 km\nControles e combate", 123, 34, 180, 53, 19, Muted);
         ui.Button(notes, "", 2, 2, 316, 99, OpenNotes, bare: true);
 
         var selector = ui.Button(safe, "", -338, -178, 312, 54, OpenModes, anchor: RightBottom);
@@ -352,7 +352,7 @@ public sealed class OZLobby : MonoBehaviour
 
     void OpenModes()
     {
-        var panel = OpenDialog("MODOS DE JOGO", "Escolha como quer entrar na Costa de Ferro.");
+        var panel = OpenDialog("MODOS DE JOGO", "Escolha como quer entrar na Ilha Zero.");
         for (int index = 0; index < modes.Length; index++)
         {
             var selected = (OZGame.Mode)index;
@@ -527,7 +527,7 @@ public sealed class OZLobby : MonoBehaviour
 
     void OpenNotes()
     {
-        var panel = OpenDialog("ATUALIZAÇÃO V0.7", "Costa de Ferro • Unity");
+        var panel = OpenDialog("ATUALIZAÇÃO V0.7", "Ilha Zero • Unity");
         ui.Label(panel, "Rotação 360° e enquadramento 3D.\nSensibilidade ADS e troca de ombro.\nVersão em desenvolvimento; testes pendentes.",
             25, 128, 470, 170, 24, White, TextAnchor.UpperLeft);
         ui.Button(panel, "CRÉDITOS E LICENÇAS", 25, 369, 470, 53, OpenCredits);

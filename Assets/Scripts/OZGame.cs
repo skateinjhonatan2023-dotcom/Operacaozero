@@ -15,6 +15,17 @@ public sealed class OZGame : MonoBehaviour {
  SkinnedMeshRenderer[] playerBody;
  UnityEngine.Rendering.ShadowCastingMode[] bodyShadowModes;
  bool bodyHidden; public bool Aim, Sprint, Crouch; public Vector2 Move,Look; public bool Trigger,Jump,Reload,Slide; public bool FPS;
+ public float MapRadius {get;private set;}=160;
+ public float Heading=>yaw;
+ public int Survivors {get {int n=Player&&!Player.Dead?1:0;foreach(var bot in bots)if(bot&&!bot.Dead)n++;return n;}}
+ public bool AutoSprint {get;set;}
+ public int BotDifficulty {get;set;}=1;
+ public bool InteractRequested;
+ public string NearbyInteraction {get;private set;}="";
+ public float HitUntil {get;private set;}
+ public float DamageUntil {get;private set;}
+ public Vector3 DamageSource {get;private set;}
+ OZDoor[] doors; OZDoor nearbyDoor; float nextDoorScan,nextDrop;
  public bool HealRequested;
  public bool LootRequested;
  public int Medkits { get; private set; }
@@ -36,9 +47,9 @@ public sealed class OZGame : MonoBehaviour {
  public int Weapon { get; private set; } public int Ammo=>ammo[Weapon]; public int Reserve=>reserve[Weapon]; public string WeaponName=>names[Weapon]; public int XP=>PlayerPrefs.GetInt("OZ_XP",0);
  readonly string[] names={"Rifle","SMG","Sniper","Pistola"};readonly int[] capacity={30,24,5,12},damage={34,24,95,30};readonly float[] rate={.13f,.08f,.85f,.24f},reach={100,65,220,45}; readonly int[] ammo={30,24,5,12},reserve={120,144,25,72};
  float yaw,pitch=8,vy,nextShot,reloadUntil,slideUntil,startTime; int reloadWeapon; CharacterController cc; AudioSource audioSource; bool finished;
- void Start(){if(!view)view=Camera.main;SetFrameRate(PlayerPrefs.GetInt("OZ_FPS",30));SetQuality(PlayerPrefs.GetInt("OZ_QUALITY",0));Sensitivity=PlayerPrefs.GetFloat("OZ_SENS",1);AdsSensitivity=Mathf.Clamp(PlayerPrefs.GetFloat("OZ_ADS_SENS",.65f),.2f,3f);audioSource=gameObject.AddComponent<AudioSource>();shotEffects=gameObject.AddComponent<OZShotEffects>();shotEffects.Initialize(effectsMaterial);if(!soldier||!rifle||!shotSound||!view||spawns==null||spawns.Length<8){Result="Conteúdo gráfico obrigatório ausente";enabled=false;return;} Player=Spawn(spawns[0].position);cc=Player.GetComponent<CharacterController>();playerBody=Player.GetComponentsInChildren<SkinnedMeshRenderer>(true);bodyShadowModes=new UnityEngine.Rendering.ShadowCastingMode[playerBody.Length];for(int i=0;i<playerBody.Length;i++)bodyShadowModes[i]=playerBody[i].shadowCastingMode;Player.Pose(0,false);UpdateCamera(true);}
+ void Start(){if(!view)view=Camera.main;SetFrameRate(PlayerPrefs.GetInt("OZ_FPS",30));SetQuality(PlayerPrefs.GetInt("OZ_QUALITY",0));Sensitivity=PlayerPrefs.GetFloat("OZ_SENS",1);AdsSensitivity=Mathf.Clamp(PlayerPrefs.GetFloat("OZ_ADS_SENS",.65f),.2f,3f);audioSource=gameObject.AddComponent<AudioSource>();shotEffects=gameObject.AddComponent<OZShotEffects>();shotEffects.Initialize(effectsMaterial);if(!soldier||!rifle||!shotSound||!view||spawns==null||spawns.Length<8){Result="Conteúdo gráfico obrigatório ausente";enabled=false;return;} var terrain=Terrain.activeTerrain;if(terrain)MapRadius=Mathf.Min(terrain.terrainData.size.x,terrain.terrainData.size.z)*.5f;Zone=MapRadius*.9f;doors=FindObjectsByType<OZDoor>(FindObjectsSortMode.None);BotDifficulty=Mathf.Clamp(PlayerPrefs.GetInt("OZ_BOT_DIFFICULTY",1),0,2);AutoSprint=PlayerPrefs.GetInt("OZ_AUTO_SPRINT",0)==1;Player=Spawn(spawns[0].position);cc=Player.GetComponent<CharacterController>();playerBody=Player.GetComponentsInChildren<SkinnedMeshRenderer>(true);bodyShadowModes=new UnityEngine.Rendering.ShadowCastingMode[playerBody.Length];for(int i=0;i<playerBody.Length;i++)bodyShadowModes[i]=playerBody[i].shadowCastingMode;Player.Pose(0,false);UpdateCamera(true);}
  OZActor Spawn(Vector3 pos){var a=Instantiate(soldier,pos,Quaternion.identity);a.gameObject.SetActive(true);a.Setup();var ctrl=a.GetComponent<CharacterController>()??a.gameObject.AddComponent<CharacterController>();ctrl.enabled=true;ctrl.height=1.8f;ctrl.center=Vector3.up*.9f;ctrl.radius=.33f;return a;}
- public void Begin(Mode m){if(Playing||finished||!Player)return;mode=m;Playing=true;startTime=Time.time;for(int i=1;i<Mathf.Min(spawns.Length,m==Mode.Combate?5:13);i++){var a=Spawn(spawns[i].position);a.gameObject.AddComponent<OZBot>().Init(this,a);bots.Add(a);}
+ public void Begin(Mode m){if(Playing||finished||!Player)return;mode=m;Playing=true;startTime=Time.time;nextDrop=startTime+80;int count=Mathf.Min(spawns.Length-1,m==Mode.BattleRoyale?19:4);for(int i=0;i<count;i++){int index=m==Mode.BattleRoyale?1+i*(spawns.Length-1)/count:i+1;Vector3 p=spawns[index].position;if(m!=Mode.BattleRoyale&&Vector3.Distance(p,spawns[0].position)>130){p=spawns[0].position+Quaternion.Euler(0,i*90,0)*Vector3.forward*35;if(Physics.Raycast(p+Vector3.up*100,Vector3.down,out var ground,200))p=ground.point+Vector3.up*.2f;}var a=Spawn(p);a.gameObject.AddComponent<OZBot>().Init(this,a);bots.Add(a);}
  SpawnLoot();
  if (mode==Mode.BattleRoyale) {
   Vector3 drop = spawns[0].position + Vector3.up * 36;
@@ -78,6 +89,7 @@ public sealed class OZGame : MonoBehaviour {
   }
   UpdateCamera(false);
   UpdateLoot();
+  UpdateInteraction();
   UpdateWeapons();
   if (mode==Mode.BattleRoyale) UpdateZone(dt);
   if (Player.Dead) Finish(false);
@@ -96,7 +108,7 @@ public sealed class OZGame : MonoBehaviour {
   pitch=Mathf.Clamp(pitch+look.y*sensitivity*.18f,-65,65);
   Quaternion heading=Quaternion.Euler(0,yaw,0);
   Vector3 desired=heading*new Vector3(input.x,0,input.y);
-  bool sprint=Sprint||Input.GetKey(KeyCode.LeftShift);
+  bool sprint=Sprint||Input.GetKey(KeyCode.LeftShift)||(AutoSprint&&input.y>.88f);
   bool crouch=Crouch||Input.GetKey(KeyCode.LeftControl);
   if (!Deploying && cc.isGrounded && Time.time>=slideUntil && (Slide||Input.GetKeyDown(KeyCode.C))) {
    slideDirection=desired.sqrMagnitude>.01f?desired.normalized:heading*Vector3.forward;
@@ -163,8 +175,10 @@ public sealed class OZGame : MonoBehaviour {
 
  void UpdateZone(float dt) {
   float elapsed=Time.time-startTime;
-  ZoneSeconds=Mathf.Max(0,25-elapsed);
-  Zone=Mathf.Max(12,140-Mathf.Max(0,elapsed-25)*.85f);
+  float initial=MapRadius*.9f,grace=MapRadius>200?55:25;
+  ZoneSeconds=Mathf.Max(0,grace-elapsed);
+  Zone=Mathf.Max(12,initial-Mathf.Max(0,elapsed-grace)*(initial-12)/(MapRadius>200?480f:150f));
+  if(Time.time>=nextDrop){nextDrop=Time.time+100;SpawnAirdrop();}
   if (Time.time>=nextZoneDraw) {
    zoneVisual.SetRadius(Zone);
    nextZoneDraw=Time.time+.75f;
@@ -174,6 +188,21 @@ public sealed class OZGame : MonoBehaviour {
    if (bot && !bot.Dead) ApplyZoneDamage(bot,dt);
  }
 
+ void SpawnAirdrop(){
+  var p=Random.insideUnitCircle*Mathf.Max(8,Zone*.65f);
+  if(!Physics.Raycast(new Vector3(p.x,120,p.y),Vector3.down,out var ground,200,~0,QueryTriggerInteraction.Ignore))return;
+  for(int i=0;i<4;i++)loot.Add(OZLoot.Create((OZLoot.Kind)i,ground.point+new Vector3(i%2,0,i/2)*1.3f,effectsMaterial));
+ }
+ void UpdateInteraction(){
+  if(Time.time>=nextDoorScan){
+   nextDoorScan=Time.time+.2f;nearbyDoor=null;float best=3.2f*3.2f;
+   if(doors!=null)foreach(var door in doors){if(!door)continue;float d=(door.transform.position-Player.transform.position).sqrMagnitude;if(d<best){best=d;nearbyDoor=door;}}
+   NearbyInteraction=nearbyDoor?"PORTA":"";
+  }
+  if((InteractRequested||Input.GetKeyDown(KeyCode.F))&&nearbyDoor)nearbyDoor.Toggle();
+  InteractRequested=false;
+ }
+ public void BotHit(float amount,Vector3 source){if(!Playing||!Player||Player.Dead)return;DamageSource=source;DamageUntil=Time.time+1.2f;Player.Damage(amount);}
  void ApplyZoneDamage(OZActor actor,float dt) {
   Vector3 position=actor.transform.position;
   if (position.x*position.x+position.z*position.z>Zone*Zone)
@@ -230,6 +259,7 @@ public sealed class OZGame : MonoBehaviour {
     if (actor) {
      var body=actor.GetComponent<CharacterController>();
      bool headshot=hit.point.y-actor.transform.position.y>body.height*.81f;
+     HitUntil=Time.time+.18f;
      if (actor.Damage(damage[Weapon]*(headshot?1.45f:1f),headshot)) Kills++;
     }
    } else target=shotRay.GetPoint(distance);

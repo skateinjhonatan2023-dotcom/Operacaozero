@@ -20,7 +20,7 @@ public sealed class OZHud:MonoBehaviour {
     else if(fireFinger<0&&Inside(n,.83f,.38f,.15f,.30f)){fireFinger=t.fingerId;game.Trigger=true;}
     else if(lookFinger<0&&Inside(n,.30f,.20f,.52f,.66f)
       &&!Inside(n,.68f,.67f,.14f,.10f)&&!Inside(n,.68f,.80f,.14f,.10f)
-      &&!Inside(n,.30f,.72f,.32f,.08f)&&!Inside(n,.30f,.81f,.32f,.07f))
+      &&!Inside(n,.30f,.63f,.32f,.08f)&&!Inside(n,.30f,.72f,.32f,.08f)&&!Inside(n,.30f,.81f,.32f,.07f))
      lookFinger=t.fingerId;
    }
    if(t.fingerId==moveFinger){moveSeen=!end;game.Move=end?Vector2.zero:Vector2.ClampMagnitude((p-stickOrigin)/(area.height*.12f),1);if(end)moveFinger=-1;}
@@ -40,7 +40,12 @@ public sealed class OZHud:MonoBehaviour {
  GUI.Label(R(.025f,.025f,.42f,.08f),"HP "+Mathf.CeilToInt(game.Player.hp)+"   COLETE "+Mathf.CeilToInt(game.Player.armor)+"   CAP "+Mathf.CeilToInt(game.Player.Helmet)+"   K "+game.Kills);GUI.Label(R(.67f,.025f,.32f,.08f),game.WeaponName+"  "+game.Ammo+" / "+game.Reserve);GUI.Label(R(.43f,.46f,.14f,.08f),"       +");if(game.mode==OZGame.Mode.BattleRoyale)GUI.Label(R(.39f,.03f,.28f,.08f),game.ZoneSeconds>0?"Zona fecha em "+Mathf.CeilToInt(game.ZoneSeconds)+"s":"Zona "+Mathf.RoundToInt(game.Zone)+"m");
  if(nativeLobby&&game.mode==OZGame.Mode.Treino&&B(.19f,.13f,.12f,.075f,"VOLTAR")){game.Back();return;}
  if(game.Deploying)GUI.Label(R(.36f,.31f,.32f,.08f),"POUSO • DIRECIONE A QUEDA");
- GUI.Box(R(.02f,.13f,.15f,.24f),"MAPA");foreach(var bot in game.bots)if(bot&&!bot.Dead){var p=bot.transform.position;GUI.Label(R(.095f+p.x/140*.06f,.24f-p.z/140*.08f,.03f,.04f),"·");}var pp=game.Player.transform.position;GUI.Label(R(.095f+pp.x/140*.06f,.24f-pp.z/140*.08f,.04f,.05f),"▲");
+ GUI.Box(R(.02f,.13f,.15f,.24f),"MAPA");var pp=game.Player.transform.position;float radius=Mathf.Max(1,game.MapRadius);
+ GUI.Label(R(.085f+Mathf.Clamp(pp.x/radius,-1,1)*.06f,.22f-Mathf.Clamp(pp.z/radius,-1,1)*.08f,.04f,.05f),"▲");
+ GUI.Label(R(.35f,.11f,.30f,.06f),$"{Mathf.RoundToInt(Mathf.Repeat(game.Heading,360))}°  •  VIVOS {game.Survivors}");
+ if(game.HitUntil>Time.time)GUI.Label(R(.47f,.42f,.10f,.08f),"✕");
+ if(game.DamageUntil>Time.time){Vector3 local=Quaternion.Euler(0,-game.Heading,0)*(game.DamageSource-pp);string arrow=Mathf.Abs(local.x)>Mathf.Abs(local.z)?local.x>0?"→":"←":local.z>0?"↑":"↓";GUI.Label(R(.46f,.35f,.16f,.08f),"DANO "+arrow);}
+ if(game.NearbyInteraction!=""&&B(.30f,.63f,.32f,.08f,"INTERAGIR "+game.NearbyInteraction))game.InteractRequested=true;
  if(game.NearbyLoot!=""&&B(.30f,.72f,.32f,.08f,"COLETAR "+game.NearbyLoot))game.LootRequested=true;
  if(B(.30f,.81f,.32f,.07f,"KIT MÉDICO ×"+game.Medkits))game.HealRequested=true;
  GUI.Box(R(.045f,.62f,.22f,.28f),"ANALÓGICO");GUI.Label(R(.13f+game.Move.x*.07f,.73f-game.Move.y*.08f,.07f,.08f),"●");GUI.Box(R(.83f,.38f,.15f,.30f),"ATIRAR");if(B(.83f,.24f,.15f,.09f,"MIRA"))game.Aim=!game.Aim;if(B(.68f,.67f,.14f,.10f,"PULAR"))game.Jump=true;if(B(.83f,.70f,.15f,.10f,"RECARREGAR"))game.Reload=true;if(B(.68f,.80f,.14f,.10f,"AGACHAR"))game.Crouch=!game.Crouch;if(B(.83f,.82f,.15f,.10f,"DESLIZAR"))game.Slide=true;if(B(.04f,.47f,.18f,.09f,"CORRER"))game.Sprint=!game.Sprint;if(B(.83f,.13f,.15f,.08f,"FPS / TPS"))game.FPS=!game.FPS;if(!game.FPS&&B(.67f,.13f,.15f,.08f,"OMBRO"))game.LeftShoulder=!game.LeftShoulder;for(int i=0;i<4;i++)if(B(.30f+i*.09f,.89f,.085f,.09f,new[]{"AR","SMG","SR","HG"}[i]))game.SetWeapon(i);
