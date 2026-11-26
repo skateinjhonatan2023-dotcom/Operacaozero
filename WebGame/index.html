@@ -84,6 +84,7 @@
   <canvas id="map" width="144" height="144" aria-label="Minimapa"></canvas>
   <div id="zone-alert" role="status"></div><div id="district"></div>
   <div id="crosshair"><i></i><i></i><i></i><i></i></div>
+  <div id="cover-hint" hidden>Disparo bloqueado</div>
   <div class="gear"><span id="health"></span><progress id="hp" max="100" value="100"></progress><small id="kits"></small><small id="skill-state" role="status"></small></div>
   <div class="ammo"><small id="weapon-name">M4A1</small><div><b id="mag"></b> <span id="reserve"></span></div><small id="action"></small></div>
   <button id="loot" hidden>Coletar</button>
@@ -114,7 +115,8 @@
     <label>Limite de FPS <select id="fps"><option value="30">30 FPS</option><option value="60">60 FPS</option></select></label>
     <label>Resolução dinâmica <input type="checkbox" id="adaptive-resolution"></label>
     <small id="render-resolution"></small>
-    <label>Sensibilidade <input id="sensitivity" type="range" min="0.45" max="2.25" step="0.05"><output id="sensitivity-value"></output></label>
+    <label>Sensibilidade da câmera <input id="sensitivity" type="range" min="0.45" max="2.25" step="0.05"><output id="sensitivity-value"></output></label>
+    <label>Sensibilidade ao mirar <input id="ads-sensitivity" type="range" min="0.45" max="2.25" step="0.05"><output id="ads-sensitivity-value"></output></label>
     <label>Modo de mira <select id="aim-mode"><option value="toggle">Toque para alternar</option><option value="hold">Segure para mirar</option></select></label>
     <button id="layout-open" class="primary">Editar controles</button>
     <button id="lobby-back" hidden>Voltar ao painel inicial</button>

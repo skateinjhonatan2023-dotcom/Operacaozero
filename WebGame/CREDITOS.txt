@@ -52,3 +52,10 @@ Costa de Ferro 0.11: ilustração original do porto gerada para a tela de entrad
 Hangar, sinalização, céu e interface criados para Operação Zero.
 Tipografia Barlow Condensed, The Barlow Project Authors, SIL Open Font License 1.1.
 https://github.com/jpt/barlow
+
+Costa de Ferro 0.13: panorama Kloofendal 48d Partly Cloudy (Pure Sky),
+Poly Haven, CC0 1.0. HDRI equiretangular 1K convertido em WebP com exposição e
+tonemapping ajustados para o perfil mobile. Chapa metálica do cenário e mapa
+normal da chapa produzidos para o projeto.
+https://polyhaven.com/a/kloofendal_48d_partly_cloudy_puresky
+https://creativecommons.org/publicdomain/zero/1.0/

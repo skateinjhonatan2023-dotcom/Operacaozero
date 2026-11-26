@@ -20,6 +20,7 @@ ASSETS = {
     "outcrop": (WEB / "assets/outcrop.glb", "model/gltf-binary"),
     "tree": (WEB / "assets/tree.glb", "model/gltf-binary"),
     "distantTree": (WEB / "assets/tree-distant.glb", "model/gltf-binary"),
+    "coastalSky": (WEB / "assets/mobile/coastal-sky.webp", "image/webp"),
     **{key: (WEB / f"assets/mobile/{key}.jpg", "image/jpeg")
        for key in ("concrete", "asphalt", "grass", "stone")},
     **{key + "Normal": (WEB / f"assets/mobile/{key}-normal.jpg", "image/jpeg")

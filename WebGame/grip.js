@@ -83,7 +83,7 @@ export function updateGrip(actor,pitch,recoil,compact,aiming=false) {
     }
     gun.position.copy(root.worldToLocal(right));
     const name=actor.clip?.name??'';
-    const planted=/^(ready_idle|ready_walk|aim_|shoot|crouch_idle)/.test(name);
+    const planted=/^(ready_idle|ready_walk|ready_crouch|aim_|shoot|crouch_idle)/.test(name);
     const weaponPitch=T.MathUtils.clamp(pitch,-.40,.40)*(aiming?.85:.44)+recoil;
     localForward.set(0,Math.sin(weaponPitch),Math.cos(weaponPitch));
     if(bones.support&&!compact&&planted){

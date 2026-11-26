@@ -19,8 +19,10 @@ details{z-index:4}details pre{white-space:pre-wrap;max-width:min(480px,86vw);max
 #map{position:absolute;top:12px;right:12px;width:clamp(80px,13vw,144px);height:auto;border-radius:50%;border:1px solid #ebf0d393;background:#152122}
 #zone-alert{top:57px;left:50%;transform:translateX(-50%);font-size:12px}#zone-alert:empty{display:none}
 #crosshair{position:absolute;left:50%;top:50%;width:28px;height:28px;transform:translate(-50%,-50%)}#crosshair i{position:absolute;background:#eaf1ea;border-radius:1px;box-shadow:0 0 2px #0b191b}
-#crosshair i:nth-child(1),#crosshair i:nth-child(2){width:2px;height:6px;left:13px}#crosshair i:nth-child(2){bottom:0}
-#crosshair i:nth-child(3),#crosshair i:nth-child(4){height:2px;width:6px;top:13px}#crosshair i:nth-child(4){right:0}
+#crosshair i:nth-child(1),#crosshair i:nth-child(2){width:2px;height:6px;left:calc(50% - 1px)}#crosshair i:nth-child(2){bottom:0}
+#crosshair i:nth-child(3),#crosshair i:nth-child(4){height:2px;width:6px;top:calc(50% - 1px)}#crosshair i:nth-child(4){right:0}
+#crosshair.blocked i{background:#ff9a5d}
+#cover-hint{position:absolute;left:50%;top:calc(50% + 25px);transform:translateX(-50%);color:#ffb97c;background:#19201de6;border-radius:5px;padding:4px 8px;font-size:12px;font-weight:700;white-space:nowrap;pointer-events:none}
 #crosshair.hit i{background:var(--accent)}
 .gear{bottom:16px;left:16px;display:grid;gap:4px;min-width:140px}.gear progress{width:100%;height:8px;accent-color:var(--accent)}
 .ammo{bottom:16px;right:16px;text-align:right;min-width:110px}.ammo b{font-size:34px;line-height:1}.ammo span,.ammo small,.gear small{color:#c5cfca}.ammo small{font-size:10px;letter-spacing:.12em}
@@ -90,10 +92,10 @@ details{z-index:4}details pre{white-space:pre-wrap;max-width:min(480px,86vw);max
 #deployment-action{position:absolute;right:max(6vw,env(safe-area-inset-right));bottom:19%;pointer-events:auto;min-width:0;padding:10px 17px;border:1px solid #f9e7aa;background:#efe2a8;color:#192425}
 #deployment-action:disabled{opacity:.55}
 #zip-action{position:absolute;left:50%;bottom:30%;transform:translateX(-50%);pointer-events:auto;padding:8px 12px;color:#ffe8b9;background:#28322cea;border:1px solid #ecbc6a;border-radius:4px;font-size:13px}
-body[data-phase]:not([data-phase='playing']) :is(.match,.gear,.ammo,#district,#zone-alert,#crosshair,#throw-type,#weapon-swap,#loot){display:none!important}
+body[data-phase]:not([data-phase='playing']) :is(.match,.gear,.ammo,#district,#zone-alert,#crosshair,#cover-hint,#throw-type,#weapon-swap,#loot){display:none!important}
 body[data-phase]:not([data-phase='playing']) #touch button:not(#stick):not(#jump){display:none}
 body:is([data-phase='flight'],[data-phase='descent']) #touch #jump,body[data-phase='flight'] #touch #stick{display:none}
-body[data-zipline] #touch button:not(#jump),body[data-zipline] :is(#throw-type,#weapon-swap,#crosshair){display:none}
+body[data-zipline] #touch button:not(#jump),body[data-zipline] :is(#throw-type,#weapon-swap,#crosshair,#cover-hint){display:none}
 @media(orientation:portrait){.deployment-status{top:46px;max-width:56vw}.deployment-status span{max-width:52vw}#deployment-action{bottom:25%}}
 
 @media(pointer:coarse) and (orientation:landscape){

@@ -1,5 +1,5 @@
 import { placeScenery } from './scenery.js';
-import { haze, makeSky, warehouseSigns, wearOnGeometry } from './arena-finish.js';
+import { haze, makeSky, warehouseSigns, wearOnGeometry, windowReflections } from './arena-finish.js';
 import { calmWaterSurface, cladding, shoreShelf, waterSurface } from './coast.js';
 import * as T from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
@@ -30,15 +30,22 @@ export function buildArena(scene, textures, rocks, tree, distantTree) {
     const steel = material(0x4a6674, tiled('concrete', 3, 2), .31);
     const rust = material(0x9e5d49, tiled('concrete', 2, 1), .25);
     const siding=cladding();
-    const harborPaint=material(0xa95839,siding,.31,.58);
-    const harborBlue=material(0x477c86,siding,.37,.56);
-    const harborGold=material(0xba914e,siding,.29,.57);
+    const harborPaint=material(0xa95839,siding.color,.24,.66);
+    const harborBlue=material(0x477c86,siding.color,.27,.62);
+    const harborGold=material(0xba914e,siding.color,.22,.65);
     const pier=material(0x8f8983,tiled('concrete',5,3),.04,.84);
     const signal=material(0xf3c274,null,.24,.53);
     const dark = material(0x253238, null, .5);
-    const roof = material(0x485253, tiled('asphalt', 3, 2), .28);
+    const roof = material(0x596361, tiled('asphalt', 3, 2), .19);
     const road = material(0xc3bbb2, tiled('asphalt', 34, 2));
     const avenue=material(0xb9b6a8,tiled('asphalt',2,33));
+    const apron=material(0x99948c,tiled('concrete',9,7));
+    const lining=material(0x9b9d97,tiled('concrete',4,1));
+    lining.emissive.setHex(0x7b858b);
+    lining.emissiveIntensity=.17;
+    const fixture=material(0xc7d3c8);
+    fixture.emissive.setHex(0xf2f1db);
+    fixture.emissiveIntensity=.75;
     const surfaces=[
         [soil,'grassNormal',93,93,.62],
         [plaster,'concreteNormal',3,2,.93],
@@ -47,12 +54,18 @@ export function buildArena(scene, textures, rocks, tree, distantTree) {
         [road,'asphaltNormal',34,2,.82],
         [avenue,'asphaltNormal',2,33,.82],
         [roof,'asphaltNormal',3,2,.44],
+        [apron,'concreteNormal',9,7,.55],
     ].filter(([,normal])=>textures[normal]).map(([surface,normal,x,y,strength])=>{
         surface.normalScale.setScalar(strength);
         return [surface,tiled(normal,x,y)];
     });
+    for(const surface of [harborPaint,harborBlue,harborGold]){
+        surface.normalScale.setScalar(.62);
+        surfaces.push([surface,siding.normal]);
+    }
     const wood = material(0x685741);
     const glass = material(0x587a89, null, .33, .29);
+    const windowGlass=material(0xb1c2cb,windowReflections(),.08,.47);
     const sill = material(0x9ea7a5, null, .29, .76);
     const paint = material(0xd9aa62);
     const lanePaint=material(0xd4d5c5);
@@ -98,6 +111,23 @@ export function buildArena(scene, textures, rocks, tree, distantTree) {
         for(const z of [-22,21])for(let i=0;i<7;i++)
             box(2.3+i*1.23,.029,z,.67,.013,3.05,lanePaint);
     }
+    const serviceYards=[[-25,-22,31,26],[29,-22,30,26],[-26,27,28,27],[30,27,33,28]];
+    function loadingYard(x,z,w,d) {
+        plane(x,z,w,d,apron,.010);
+        for(const side of [-1,1]){
+            const edge=x+side*(w/2-.45);
+            box(edge,.019,z,.10,.013,d-.35,lanePaint);
+            box(x,.019,z+side*(d/2-.40),w-.9,.013,.10,lanePaint);
+        }
+        for(const side of [-1,1]){
+            const lane=x+side*(w/2-2.2);
+            for(let i=-2;i<=2;i++){
+                const stripe=box(lane,.023,z+i*1.3,2.65,.012,.11,paint);
+                stripe.rotation.y=side*.47;
+            }
+        }
+    }
+    serviceYards.forEach(yard=>loadingYard(...yard));
     const water=waterSurface();
     const sea=plane(0,0,1100,1100,water,-1.41);
     scene.add(shoreShelf());
@@ -106,32 +136,65 @@ export function buildArena(scene, textures, rocks, tree, distantTree) {
     const scenery=[];
     const trees=[],stones=[];
 
-    function warehouse(x,z,w,d,mat) {
+    function warehouse(x,z,w,d,mat,designation='') {
         const eave = 4.4;
         box(x,.12,z,w,.24,d,plaster,true);
         lootSites.push({kind:'interior',points:[
             {x:x-w*.26,y:.24,z:z-d*.23}, {x:x+w*.27,y:.24,z:z+d*.20},
         ]});
-        box(x,2.2,z+d/2,w,eave,.32,mat,true);
+        const rear=z+d/2;
+        if(designation){
+            const left=x-w/2,right=x+w/2,doorCenter=x-w*.27,doorWidth=3.3,doorHeight=2.66;
+            const lo=doorCenter-doorWidth*.5,hi=doorCenter+doorWidth*.5;
+            box((left+lo)*.5,2.2,rear,lo-left,eave,.32,mat,true);
+            box((hi+right)*.5,2.2,rear,right-hi,eave,.32,mat,true);
+            box(doorCenter,(doorHeight+eave)*.5,rear,doorWidth,eave-doorHeight,.32,mat,true);
+            box(doorCenter,2.91,rear+.23,3.56,.37,.16,dark);
+            box(doorCenter,.104,rear+.7,3.53,.208,1.40,plaster,true);
+            box(lo-.08,1.39,rear+.20,.16,2.79,.16,steel);
+            box(hi+.08,1.39,rear+.20,.16,2.79,.16,steel);
+            box(doorCenter,2.68,rear+.32,3.48,.12,.31,paint);
+            box(x,4.365,z,w-.31,.052,d-.31,lining);
+            box((left+lo)*.5,2.29,rear-.18,lo-left,4.08,.032,lining);
+            box((hi+right)*.5,2.29,rear-.18,right-hi,4.08,.032,lining);
+            for(const side of [-1,1]){
+                box(x+side*w*.29,.268,z-d*.17,.085,.017,d*.58,lanePaint);
+                box(x+side*w*.39,3.98,z,.14,.18,d-.64,steel);
+                box(x+side*(w*.5-.18),2.29,z,.032,4.08,d-.31,lining);
+            }
+            for(const off of [-.29,.03,.32]){
+                box(x,3.99,z+off*d,w-.65,.21,.18,steel);
+                box(x,3.86,z+off*d,2.1,.066,.15,fixture);
+            }
+        }else box(x,2.2,rear,w,eave,.32,mat,true);
         box(x-w/2,2.2,z,.32,eave,d,mat,true);
         box(x+w/2,2.2,z,.32,eave,d,mat,true);
         const section = (w-5)/2;
         for(const side of [-1,1]){
-            box(x+side*(w+5)/4,2.2,z-d/2,section,eave,.32,mat,true);
-            box(x+side*(w+5)/4,2.95,z-d/2-.19,section*.52,1.00,.10,glass);
-            box(x+side*2.52,1.7,z-d/2-.19,.10,3.4,.14,dark);
             const pane=x+side*(w+5)/4;
+            box(pane,2.2,z-d/2,section,eave,.32,mat,true);
+            box(pane,3.32,z-d/2-.17,section-.14,1.84,.04,mat===harborGold?harborBlue:harborGold);
+            box(pane,.34,z-d/2-.176,section,.66,.045,pier);
+            box(pane,2.96,z-d/2-.217,section*.56,1.19,.075,steel);
+            box(pane,2.95,z-d/2-.262,section*.52,1.00,.042,windowGlass);
+            box(x+side*2.53,1.7,z-d/2-.20,.13,3.4,.17,dark);
             box(pane,2.42,z-d/2-.265,section*.57,.092,.19,sill);
-            box(pane,2.96,z-d/2-.258,.072,1.01,.09,dark);
+            for(const jamb of [-1,1])
+                box(pane+jamb*section*.093,2.96,z-d/2-.294,.072,1.01,.045,dark);
         }
-        signPoints.push({x,z:z-d/2-.25});
+        signPoints.push({x,z:z-d/2-.25,designation});
         for(const side of [-1,1]){
             box(x+side*(w*.5-.32),.29,z-d/2-.18,.52,.58,.10,steel);
             box(x+side*2.69,2.57,z-d/2-.245,.15,.25,.14,signal);
         }
         box(x,3.91,z-d/2,5,1,.37,steel,true);
+        const awning=box(x,3.76,z-d/2-.66,5.45,.14,.99,steel,true);
+        awning.rotation.x=-.12;
+        box(x,3.66,z-d/2-1.14,5.47,.16,.14,dark);
         const roofHeight=4.58;
         box(x,roofHeight-.09,z,w+.56,.18,d+.86,roof,true);
+        box(x,4.33,z-d/2-.47,w+.62,.14,.48,steel);
+        box(x,4.46,z+d/2+.38,w+.62,.16,.34,steel);
         for(const side of [-1,1]){
             box(x+side*(w/2+.16),roofHeight+.27,z,.18,.54,d+.82,steel,true);
             box(x+side*(w*.29),roofHeight+.27,z-d/2-.33,w*.36,.54,.18,steel,true);
@@ -142,10 +205,14 @@ export function buildArena(scene, textures, rocks, tree, distantTree) {
             const height=roofHeight*(i+1)/steps;
             const stairZ=z+d/2+.43+(steps-i-.5)*tread;
             box(stairX,height/2,stairZ,2.14,height,tread,steel,true);
-            box(stairX-1.14,height+.45,stairZ,.12,.10,tread,paint);
-            box(stairX+1.14,height+.45,stairZ,.12,.10,tread,paint);
             if(i%4===0)for(const side of [-1,1])
-                box(stairX+side*1.14,height+.21,stairZ,.10,.49,.1,dark);
+                box(stairX+side*1.12,height+.46,stairZ,.075,.92,.075,steel);
+        }
+        for(const side of [-1,1]){
+            const railX=stairX+side*1.12;
+            const railStart=rear+.43+(steps-.5)*tread;
+            truss(railX,roofHeight/steps+.92,railStart,railX,roofHeight+.92,rear+.43+tread*.5,.072,paint);
+            box(railX,roofHeight+.46,rear+.43+tread*.5,.075,.92,.075,steel);
         }
         lootSites.push({kind:'roof',points:[
             {x:x-w*.22,y:roofHeight,z:z+d*.16}, {x:x+w*.21,y:roofHeight,z:z-d*.18},
@@ -157,10 +224,10 @@ export function buildArena(scene, textures, rocks, tree, distantTree) {
         }
         box(x,1.05,z+1.5,2.2,2.1,2.3,steel,true);
     }
-    warehouse(-24,-20,19,16,plaster);
-    warehouse(28,-21,18,15,steel);
-    warehouse(-26,26,16,14,rust);
-    warehouse(30,25,21,16,harborGold);
+    warehouse(-24,-20,19,16,plaster,'MANUTENÇÃO');
+    warehouse(28,-21,18,15,steel,'CARGA');
+    warehouse(-26,26,16,14,rust,'OFICINA');
+    warehouse(30,25,21,16,harborGold,'EXPEDIÇÃO');
     warehouse(68,-38,18,15,rust);
     warehouse(-69,-41,21,14,steel);
     warehouse(-65,38,19,17,plaster);
@@ -180,8 +247,8 @@ export function buildArena(scene, textures, rocks, tree, distantTree) {
         box(x,5.75,z,12.65,.3,9.6,roof);
         for(const height of [1.55,4.1])for(const dx of [-3.6,0,3.6]){
             box(x+dx,height,z-4.56,2.05,1.26,.16,dark);
-            box(x+dx,height,z-4.67,1.82,.98,.10,glass);
-            box(x+dx,height,z+4.61,1.82,.98,.10,glass);
+            box(x+dx,height,z-4.67,1.82,.98,.10,windowGlass);
+            box(x+dx,height,z+4.61,1.82,.98,.10,windowGlass);
             box(x+dx,height-.58,z-4.67,2.14,.094,.21,sill);
             box(x+dx,height,z+4.674,.075,1.0,.069,dark);
             box(x+dx,height,z-4.737,.075,1.0,.069,dark);
@@ -206,13 +273,15 @@ export function buildArena(scene, textures, rocks, tree, distantTree) {
 
     function container(x,z,mat) {
         box(x,1.22,z,7,2.44,2.72,mat,true);
-        for(let i=-3.3;i<=3.3;i+=.41){
-            box(x+i,1.21,z+1.39,.11,2.32,.11,mat);
-            box(x+i,1.21,z-1.39,.11,2.32,.11,mat);
+        for(const side of [-1,1]){
+            box(x,2.40,z+side*1.37,7.04,.13,.10,dark);
+            box(x,.10,z+side*1.37,7.04,.15,.10,dark);
+            for(const end of [-1,1])box(x+end*3.49,1.22,z+side*1.33,.16,2.46,.14,dark);
+            box(x+3.56,1.22,z+side*.52,.08,2.15,.065,steel);
+            box(x+3.58,.91,z+side*.43,.10,.075,.30,sill);
         }
-        for(const side of [-1,1]) box(x+3.55,1.23,z+side*.43,.07,2.24,.07,dark);
     }
-    for(const [x,z] of [[-14,-9],[-42,8],[18,10],[42,-11],[15,-36],[-12,42],[47,33],[-64,-67],[68,-65],[-82,52],[86,63],[84,-8],[-162,17],[-119,-25],[117,13],[159,-9],[-13,-149],[19,-157],[-16,153],[25,158]]) container(x,z, x>0 ? steel : rust);
+    for(const [x,z] of [[-14,-9],[-42,8],[18,10],[42,-11],[15,-36],[-12,42],[47,33],[-64,-67],[68,-65],[-82,52],[86,63],[84,-8],[-162,17],[-119,-25],[117,13],[159,-9],[-13,-149],[19,-157],[-16,153],[25,158]]) container(x,z, x>0 ? harborBlue : harborPaint);
     for(const [x,z] of [[-11,10],[-12,14],[17,-10],[23,13],[-31,-3],[14,33],[30,-8],[33,35],[-33,35]]){
         box(x,.55,z,1.35,1.1,1.28,wood,true);
         for(const off of [-.50,.50]) box(x+off,.55,z, .13,1.16,1.33,dark);
@@ -357,17 +426,35 @@ export function buildArena(scene, textures, rocks, tree, distantTree) {
     }
     blade.setAttribute('position',new T.Float32BufferAttribute(blades,3));
     blade.computeVertexNormals();
-    const grass = new T.InstancedMesh(blade,new T.MeshStandardMaterial({color:0x76834f,side:T.DoubleSide,roughness:1}),3800);
+    const bladeTints=[];
+    for(let i=0;i<7;i++)bladeTints.push(.68,.71,.55,.75,.78,.62,1,1,.85);
+    blade.setAttribute('color',new T.Float32BufferAttribute(bladeTints,3));
+    const grassMaterial=new T.MeshLambertMaterial({color:0x9da174,side:T.DoubleSide,vertexColors:true});
+    const grassCell=32,grassTiles=new Map();
     const dummy = new T.Object3D();
     let grassCount = 0;
     for(let i=0;i<6300&&grassCount<3800;i++){
         const x=(random()-.5)*374,z=(random()-.5)*374;
         if(Math.abs(z)<6.2||Math.abs(x-6)<6||obstacles.some(o=>Math.abs(x-o.x)<o.w*.5&&Math.abs(z-o.z)<o.d*.5))continue;
-        dummy.position.set(x,groundHeight(x,z),z);dummy.scale.setScalar(.47+random()*.56);dummy.rotation.y=random()*Math.PI*2;
-        dummy.updateMatrix();grass.setMatrixAt(grassCount++,dummy.matrix);
-        grass.setColorAt(grassCount-1,new T.Color().setHSL(.13+random()*.04,.22,.35+random()*.25));
+        if(serviceYards.some(([cx,cz,w,d])=>Math.abs(x-cx)<w*.5&&Math.abs(z-cz)<d*.5))continue;
+        const mx=Math.floor(x/grassCell)*grassCell,mz=Math.floor(z/grassCell)*grassCell;
+        const id=mx+':'+mz;
+        if(!grassTiles.has(id))grassTiles.set(id,{x:mx,z:mz,entries:[]});
+        const scale=.47+random()*.56,yaw=random()*Math.PI*2;
+        const color=new T.Color().setHSL(.13+random()*.04,.22,.35+random()*.25);
+        grassTiles.get(id).entries.push({x,z,scale,yaw,color});
+        grassCount++;
     }
-    grass.count=grassCount;grass.receiveShadow=true;scene.add(grass);
+    for(const tile of grassTiles.values()){
+        const grass=new T.InstancedMesh(blade,grassMaterial,tile.entries.length);
+        tile.entries.forEach(({x,z,scale,yaw,color},i)=>{
+            dummy.position.set(x,groundHeight(x,z),z);
+            dummy.scale.setScalar(scale);dummy.rotation.y=yaw;dummy.updateMatrix();
+            grass.setMatrixAt(i,dummy.matrix);grass.setColorAt(i,color);
+        });
+        grass.computeBoundingSphere();grass.visible=false;scene.add(grass);
+        tile.count=tile.entries.length;tile.mesh=grass;delete tile.entries;
+    }
     if(tree){
         let treeIndex=0;
         tree.updateMatrixWorld(true);
@@ -408,11 +495,21 @@ export function buildArena(scene, textures, rocks, tree, distantTree) {
     for(const [x,z,w,h,d] of [[-195,-257,49,35,38],[-257,-177,45,23,34],[45,-290,45,28,37],[217,-244,39,20,35],[269,22,53,29,40],[-234,210,40,21,25]]) {
         piece(island,material(0x4f6b65),x,-5,z).scale.set(w,h,d);
     }
-    // Merge static boxes by material to keep the detailed arena within a mobile draw-call budget.
+    // Partition dense batches for culling. Small batches stay together to avoid extra submissions.
     const groups=new Map(), tinted=new Map();
+    const sectorSize=96;
+    const density=new Map();
+    const surfaceKey=box=>box.material.uuid+'|'+Number(box.castShadow);
+    for(const box of boxes){
+        const key=surfaceKey(box);
+        density.set(key,(density.get(key)??0)+1);
+    }
     for(const box of boxes){
         box.updateMatrixWorld(true);
-        const key=box.material.uuid+Number(box.castShadow);
+        const surface=surfaceKey(box);
+        const divided=density.get(surface)>=105&&Math.max(box.scale.x,box.scale.y,box.scale.z)<=sectorSize*.5;
+        const sector=divided?Math.floor((box.position.x+48)/sectorSize)+':'+Math.floor((box.position.z+48)/sectorSize):'all';
+        const key=sector+'|'+surface;
         if(!groups.has(key))groups.set(key,{material:box.material,castShadow:box.castShadow,geometries:[]});
         const geometry=unit.clone();
         wearOnGeometry(geometry,box);
@@ -430,6 +527,12 @@ export function buildArena(scene, textures, rocks, tree, distantTree) {
     return { obstacles, lootSites, ground, updateView(camera,focus,time,preset) {
         if(sea.material===water)water.uniforms.time.value=time;
         for(const update of scenery)update(camera,focus,preset);
+        const altitude=focus.y-groundHeight(focus.x,focus.z);
+        for(const {x,z,mesh} of grassTiles.values()){
+            const dx=Math.max(x-focus.x,0,focus.x-x-grassCell);
+            const dz=Math.max(z-focus.z,0,focus.z-z-grassCell);
+            mesh.visible=altitude<14&&dx*dx+dz*dz<preset.grassRange*preset.grassRange;
+        }
     }, setDetail(preset,detail,maxAnisotropy=preset.anisotropy) {
         const filtering=Math.max(1,Math.min(maxAnisotropy,preset.anisotropy));
         for(const {key,copy} of tiles){
@@ -447,19 +550,19 @@ export function buildArena(scene, textures, rocks, tree, distantTree) {
             const copy=tinted.get(surface);
             if(copy&&copy.normalMap!==map){copy.normalMap=map;copy.needsUpdate=true;}
         }
-        grass.count=Math.floor(grassCount*preset.grass);
+        for(const {mesh,count} of grassTiles.values())mesh.count=Math.ceil(count*preset.grass);
         sea.material=preset.waves?water:calmWater;
     } };
 }
 
-export function lightArena(scene) {
+export function lightArena(scene,panorama) {
     scene.fog = new T.FogExp2(haze,.0037);
     scene.background=new T.Color(haze);
-    const sunDirection = new T.Vector3().setFromSphericalCoords(1,1.05,5.63);
-    const sky=makeSky();
+    const sunDirection = new T.Vector3(-.55,.74,.38).normalize();
+    const sky=makeSky(panorama);
     sky.material.toneMapped=true;
-    scene.add(sky,new T.HemisphereLight(0xd6e5ee,0xc2b092,1.73));
-    const sun = new T.DirectionalLight(0xffe2bd,3.05);
+    scene.add(sky,new T.HemisphereLight(0xcadbea,0xc0ac8f,1.55));
+    const sun = new T.DirectionalLight(0xffe4c2,3.05);
     sun.position.copy(sunDirection).multiplyScalar(170);
     sun.castShadow=true;
     sun.shadow.mapSize.set(2048,2048);

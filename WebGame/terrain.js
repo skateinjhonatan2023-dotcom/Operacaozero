@@ -40,9 +40,9 @@ export function createGround(material) {
     const geometry=new T.PlaneGeometry(terrainSize,terrainSize,divisions,divisions);
     geometry.rotateX(-Math.PI/2);
     const attr=geometry.attributes.position;
-    const colors=[];
-    const valley=new T.Color(0xb0bc8c), meadow=new T.Color(0x7f9676), stone=new T.Color(0xb6ad96);
-    const verge=new T.Color(0xb4a585);
+    const colors=new Float32Array(attr.count*3);
+    const valley=new T.Color(0xa7af76), meadow=new T.Color(0x728861), stone=new T.Color(0xb3a995);
+    const verge=new T.Color(0xb9a58c);
     const color=new T.Color();
     for(let n=0;n<attr.count;n++){
         const x=attr.getX(n),z=attr.getZ(n),y=heights[n];
@@ -55,12 +55,35 @@ export function createGround(material) {
         const vergeDistance=Math.min(Math.abs(z)-5.5,Math.abs(x-6)-5);
         const nearbyRoad=1-T.MathUtils.smoothstep(vergeDistance,.4,8.7);
         color.lerp(verge,nearbyRoad*(.40+.13*Math.sin(x*.071-z*.067))*(1-T.MathUtils.smoothstep(y,1,7)));
-        colors.push(color.r,color.g,color.b);
+        color.toArray(colors,n*3);
     }
-    geometry.setAttribute('color',new T.Float32BufferAttribute(colors,3));
+    geometry.setAttribute('color',new T.BufferAttribute(colors,3));
     geometry.computeVertexNormals();
-    const ground=new T.Mesh(geometry,material);
-    ground.receiveShadow=true;
+    const ground=new T.Group();
+    const point=new T.Vector3();
+    const block=32;
+    // Reuse the vertex and normal buffers at sector borders. Bounds cover only the indexed patch.
+    for(let z=0;z<divisions;z+=block)for(let x=0;x<divisions;x+=block){
+        const section=new T.BufferGeometry();
+        const indices=new Uint16Array(block*block*6);
+        const bounds=new T.Box3();
+        for(const [name,attribute] of Object.entries(geometry.attributes))section.setAttribute(name,attribute);
+        let write=0;
+        for(let row=z;row<=z+block;row++)for(let col=x;col<=x+block;col++){
+            const a=row*columns+col;
+            bounds.expandByPoint(point.fromBufferAttribute(attr,a));
+            if(row===z+block||col===x+block)continue;
+            const b=a+columns,c=b+1,d=a+1;
+            indices.set([a,b,d,b,c,d],write);
+            write+=6;
+        }
+        section.setIndex(new T.BufferAttribute(indices,1));
+        section.boundingBox=bounds;
+        section.boundingSphere=bounds.getBoundingSphere(new T.Sphere());
+        const mesh=new T.Mesh(section,material);
+        mesh.receiveShadow=true;
+        ground.add(mesh);
+    }
     return ground;
 }
 

@@ -6,18 +6,18 @@ const defaults = {
 };
 
 export const presets = {
-    low:{name:'Baixa',scale:.70,minScale:.76,pixels:350000,outputScale:.93,outputPixels:510000,studioScale:.90,edgeStrength:.78,
+    low:{name:'Baixa',scale:.74,minScale:.75,pixels:350000,outputScale:.93,outputPixels:510000,studioScale:.90,edgeStrength:.78,filter:false,
         shadowSize:0,shadowRange:40,shadowInterval:.45,grass:.28,normals:false,waves:false,hd:false,anisotropy:2,
-        scenery:116,treeDetail:0,bots:90,waiting:7},
-    medium:{name:'Média',scale:.93,minScale:.75,pixels:710000,outputScale:1.13,outputPixels:910000,studioScale:1.12,edgeStrength:.78,
+        scenery:116,treeDetail:0,grassRange:27,bots:90,waiting:7},
+    medium:{name:'Média',scale:.93,minScale:.75,pixels:710000,outputScale:1.13,outputPixels:910000,studioScale:1.12,edgeStrength:.78,filter:true,
         shadowSize:1024,shadowRange:43,shadowInterval:.35,grass:.52,normals:true,waves:false,hd:false,anisotropy:4,
-        scenery:158,treeDetail:16,bots:118,waiting:9},
-    high:{name:'Alta',scale:1.13,minScale:.73,pixels:1250000,outputScale:1.29,outputPixels:1450000,studioScale:1.27,edgeStrength:.74,
+        scenery:158,treeDetail:16,grassRange:40,bots:118,waiting:9},
+    high:{name:'Alta',scale:1.13,minScale:.73,pixels:1250000,outputScale:1.29,outputPixels:1450000,studioScale:1.27,edgeStrength:.74,filter:true,
         shadowSize:1536,shadowRange:54,shadowInterval:.29,grass:.79,normals:true,waves:true,hd:true,anisotropy:8,
-        scenery:214,treeDetail:35,bots:150,waiting:12},
-    ultra:{name:'Ultra',scale:1.42,minScale:.70,pixels:1900000,outputScale:1.55,outputPixels:2073600,studioScale:1.41,edgeStrength:.68,
+        scenery:214,treeDetail:35,grassRange:52,bots:150,waiting:12},
+    ultra:{name:'Ultra',scale:1.42,minScale:.70,pixels:1900000,outputScale:1.55,outputPixels:2073600,studioScale:1.41,edgeStrength:.68,filter:true,
         shadowSize:2048,shadowRange:65,shadowInterval:.22,grass:1,normals:true,waves:true,hd:true,anisotropy:12,
-        scenery:280,treeDetail:52,bots:175,waiting:14},
+        scenery:280,treeDetail:52,grassRange:65,bots:175,waiting:14},
 };
 
 function standardLayout() {
@@ -39,11 +39,13 @@ export function setupSettings({change, pause, resume, lobby}) {
         item.size=number(value.size,defaults[id][2]*.7,defaults[id][2]*1.5,item.size);
         item.opacity=number(value.opacity,.35,1,1);
     }
+    const sensitivity=number(saved.sensitivity,.45,2.25,1);
     const settings={
-        quality:Object.hasOwn(presets,saved.quality)?saved.quality:'medium',
+        quality:Object.hasOwn(presets,saved.quality)?saved.quality:matchMedia('(pointer: coarse)').matches?'low':'medium',
         fps:saved.fps===60?60:30,
         adaptive:saved.adaptive!==false,
-        sensitivity:number(saved.sensitivity,.45,2.25,1),
+        sensitivity,
+        adsSensitivity:number(saved.adsSensitivity,.45,2.25,sensitivity),
         aimMode:saved.aimMode==='hold'?'hold':'toggle',
         layout,
     };
@@ -134,13 +136,16 @@ export function setupSettings({change, pause, resume, lobby}) {
     el('adaptive-resolution').onchange=e=>{settings.adaptive=e.target.checked;save();};
     el('aim-mode').value=settings.aimMode;
     el('aim-mode').onchange=e=>{settings.aimMode=e.target.value;save();};
-    el('sensitivity').value=settings.sensitivity;
-    el('sensitivity-value').textContent=settings.sensitivity.toFixed(2)+'×';
-    el('sensitivity').oninput=e=>{
-        settings.sensitivity=Number(e.target.value);
-        el('sensitivity-value').textContent=settings.sensitivity.toFixed(2)+'×';
-        save();
-    };
+    for(const [id,key] of [['sensitivity','sensitivity'],['ads-sensitivity','adsSensitivity']]){
+        const slider=el(id),value=el(id+'-value');
+        slider.value=settings[key];
+        value.textContent=settings[key].toFixed(2)+'×';
+        slider.oninput=e=>{
+            settings[key]=Number(e.target.value);
+            value.textContent=settings[key].toFixed(2)+'×';
+            save();
+        };
+    }
     addEventListener('resize',()=>{apply();if(!el('layout-editor').hidden)renderDraft();});
     apply();
     return settings;

@@ -94,26 +94,29 @@ export function createPresentation(renderer){
         const image=new T.Mesh(triangle,filter);image.frustumCulled=false;screen.add(image);
     }
     const resolution=new T.Vector2();
-    let screenWidth=0,screenHeight=0,screenScale=0;
+    let screenWidth=0,screenHeight=0,screenScale=0,filtered=false;
     let width=1,height=1;
     renderer.info.autoReset=false;
     return {
         get width(){return width;},
         get height(){return height;},
-        get filtered(){return Boolean(target);},
+        get filtered(){return filtered;},
         configure(cssWidth,cssHeight,density,profile,studio,adaptive){
             const area=Math.max(1,cssWidth*cssHeight);
             const dimensionRatio=renderer.capabilities.maxTextureSize/Math.max(cssWidth,cssHeight,1);
             const ceiling=studio?910000:profile.pixels;
             const desired=studio?profile.studioScale:profile.scale;
             const ratio=Math.min(desired,Math.sqrt(ceiling/area),dimensionRatio)*adaptive;
-            const output=target?Math.min(density,profile.outputScale,Math.sqrt(profile.outputPixels/area),dimensionRatio)*Math.sqrt(adaptive):ratio;
+            const useFilter=Boolean(target&&(studio||profile.filter&&adaptive>=.89));
+            if(filtered&&!useFilter)target.dispose();
+            filtered=useFilter;
+            const output=filtered?Math.min(density,profile.outputScale,Math.sqrt(profile.outputPixels/area),dimensionRatio)*Math.sqrt(adaptive):ratio;
             if(screenWidth!==cssWidth||screenHeight!==cssHeight||screenScale!==output){
-                if(screenScale!==output)renderer.setPixelRatio(output);
-                renderer.setSize(cssWidth,cssHeight,false);
+                // Both size setters resize the canvas. Change the pixel ratio once, then use a physical size.
+                renderer.setDrawingBufferSize(cssWidth,cssHeight,output);
                 screenWidth=cssWidth;screenHeight=cssHeight;screenScale=output;
             }
-            if(!target){
+            if(!filtered){
                 renderer.getDrawingBufferSize(resolution);
                 width=resolution.x;height=resolution.y;
                 return;
@@ -126,7 +129,7 @@ export function createPresentation(renderer){
         },
         render(scene,camera){
             renderer.info.reset();
-            if(target){
+            if(filtered){
                 renderer.setRenderTarget(target);
                 renderer.render(scene,camera);
                 renderer.setRenderTarget(null);

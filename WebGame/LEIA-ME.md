@@ -158,3 +158,32 @@ A configuração online e as contas em um dispositivo Android exigem integraçã
 - O controlador de resolução foi testado com intervalos sintéticos para verificar o piso, a recuperação e a pausa. Na comparação em software, as duas versões renderizaram 27 quadros em 4,8 s no preset Baixo, com 44 bots ativos. Na 0.12, a resolução interna caiu de 532 × 246 para 404 × 187 durante a amostra, com saída de 616 × 285 e suavização ativa.
 - No HTML final, embarque, abertura automática do paraquedas e disparo rodaram sem requisições externas. As verificações de sobreposição do HUD passaram a 760 × 352 e 640 × 320.
 - O APK foi alinhado e assinado com o mesmo certificado da 0.11. Os resultados acima são de navegador emulado. A estabilidade e o FPS em celulares Android físicos ainda não foram medidos.
+
+## Versão 0.13
+
+- O panorama costeiro usa a fotografia equiretangular Kloofendal 48d Partly Cloudy da Poly Haven convertida para WebP. A direção da luz acompanha o sol do panorama. Os galpões ganharam marquises, caixilhos, vidros com reflexo pré-calculado e painéis de chapa metálica. Os contêineres usam um mapa de relevo e molduras com menos geometria. [Panorama CC0](https://polyhaven.com/a/kloofendal_48d_partly_cloudy_puresky)
+- A opção **Baixa** renderiza direto na tela. As demais usam o filtro de borda enquanto o orçamento de renderização permite. Sob carga, a resolução dinâmica também reduz a frequência das sombras. O terreno usa 16 setores com a mesma malha e altura de colisão. Grama próxima e grupos densos de cenário são descartados por setor. Os bots mantêm a simulação e atualizam a animação conforme a distância e o quadro desenhado. Instalações novas com toque começam em Baixa a 30 FPS. Configurações gravadas são preservadas.
+- A sensibilidade da câmera e a sensibilidade ao mirar podem ser ajustadas separadamente. A mira indica quando uma cobertura próxima impede o disparo. Tiro contínuo dilata o retículo e aumenta a dispersão, que volta ao normal entre rajadas. [Obstrução da mira na Garena](https://ff.garena.com/en/article/1673/) · [Configurações separadas de ADS no PUBG Mobile](https://www.pubgmobile.com/webplat/info/news_version3/35372/60662/60663/60724/60725/60726/m22521/202107/894225.shtml) · [Dispersão em tiro contínuo no Call of Duty Mobile](https://www.callofduty.com/blog/2026/11/call-of-duty-mobile-season-10-7th-anniversary)
+
+### Testes executados
+
+- Comparação no Chromium com SwiftShader em 760 × 352, preset Baixa, limite de 30 FPS, mesmo ponto do mapa e sala com 44 bots mais o jogador. Duas medições por versão, em ordem alternada, com cerca de 4,8 s por amostra.
+- A 0.12 desenhou 26 e 28 quadros, com medianas de 176 e 174 ms. A 0.13 desenhou 35 e 34 quadros, com medianas de 134 e 131 ms. Nos quadros amostrados, a contagem caiu de 177.738 para 149.505 triângulos. As chamadas de desenho passaram de 178–180 para 241–243.
+- A análise geométrica confirmou as 32.768 faces e coincidência com a altura de colisão em 784 amostras do terreno. No navegador com toque emulado, foram verificados os quatro presets, texturas HD, as sensibilidades independentes, o aviso perto de um galpão e a recuperação da dispersão após disparos.
+- O cliente extraído do APK final passou pelo acesso de convidado, embarque, abertura automática do paraquedas, pouso e disparo no Chromium. Os controles e indicadores foram conferidos em 760 × 352 e 640 × 320. O teste não detectou requisições externas.
+- O APK usa o mesmo pacote e certificado da 0.12, com código de versão 13. O ZIP, o alinhamento e as assinaturas v2 e v3 passaram na verificação.
+- O FPS, o aquecimento e o consumo de memória em Android físico continuam pendentes.
+
+## Versão 0.14
+
+- O operador usa passadas laterais e de recuo ao andar, agachar e mirar. As animações combinam seis articulações da perna do mocap 100STYLE com as poses existentes do tronco e dos braços. O movimento acelera e freia gradualmente. A cadência da passada acompanha o deslocamento efetivo depois das colisões. A corrida rápida exige deslocamento para a frente.
+- A câmera de ombro fica mais próxima em combate e abre um pouco durante a corrida. A transição para mirar interpola distância, altura e campo de visão. O tiro durante a caminhada mantém a passada e usa a pose com a arma levantada e o recuo da arma.
+- Os quatro galpões centrais do Terminal ganharam pátios pavimentados, sinalização própria, passagem pelos fundos e uma camada interna clara com luminárias emissivas. A escada externa dos galpões tem corrimão contínuo. A rota para o telhado usa os degraus existentes.
+
+### Testes da 0.14
+
+- Chromium com toque emulado validou o analógico lateral, a transição da corrida para a parada e a mira durante o tiro em movimento. As 12 variantes de locomoção foram conferidas no rig. Cada variante substitui seis curvas de rotação das pernas.
+- O controlador do jogador atravessou as duas entradas dos quatro galpões centrais e alcançou os quatro telhados pelas escadas. Os testes usaram a geometria e as colisões da arena real.
+- O cliente extraído do APK entrou como convidado, embarcou, abriu o paraquedas automaticamente, pousou e disparou no Chromium. O HUD manteve os controles separados em 760 × 352 e 640 × 320.
+- Em uma amostra por build de cerca de 4,8 segundos no Terminal, com Chromium/SwiftShader, resolução de 760 × 352, preset Baixa e 44 bots, a 0.13 desenhou 37 quadros e a 0.14 desenhou 34. São medições de renderização por software.
+- A build para Android foi alinhada e assinada com a chave de desenvolvimento da versão anterior. O desempenho em um celular Android físico continua pendente.

@@ -84,24 +84,38 @@ export function shoreShelf() {
 
 // World-space trim on bulkheads, using a tileable material so that longer façades do not stretch.
 export function cladding() {
-    const size=128,data=new Uint8Array(size*size*4);
+    const width=256,height=128;
+    const data=new Uint8Array(width*height*4),normalData=new Uint8Array(data.length);
     let noise=1901;
-    for(let y=0;y<size;y++)for(let x=0;x<size;x++){
+    for(let y=0;y<height;y++)for(let x=0;x<width;x++){
         noise=(Math.imul(noise,1664525)+1013904223)>>>0;
         const flute=x%16;
-        const groove=flute===0?-.29:flute===1?.07:flute===15?-.13:0;
-        const dust=.034*Math.sin(y*.23+x*.11)+(noise>>>29)*.009;
-        const rivet=(y%32===2||y%32===3)&&flute===4?.14:0;
-        const value=Math.round(224*(.89+groove+dust+rivet));
-        const i=(y*size+x)*4;
-        data[i]=data[i+1]=data[i+2]=value;data[i+3]=255;
+        const groove=flute<2?-.23:flute===2?.09:flute>=14?-.14:0;
+        const streak=.10*Math.sin(x*.72+Math.sin(y*.062))*(.5+.5*Math.sin(y*.046));
+        const seam=y%64<3?-.16:0;
+        const dust=.038*Math.sin(y*.28+x*.17)+(noise>>>28)*.004;
+        const rivet=y%32>=4&&y%32<=6&&flute>=4&&flute<=6?.18:0;
+        const value=Math.min(255,Math.round(226*(.86+groove+streak+seam+dust+rivet)));
+        const i=(y*width+x)*4;
+        data[i]=value;
+        data[i+1]=value*(.99-.032*Math.max(0,streak));
+        data[i+2]=value*(.97-.10*Math.max(0,streak));
+        data[i+3]=255;
+        const slope=flute>=1&&flute<=3?-.62:flute>=13?.62:0;
+        normalData[i]=128+110*slope;
+        normalData[i+1]=y%64===2?166:128;
+        normalData[i+2]=128+125*Math.sqrt(1-slope*slope);
+        normalData[i+3]=255;
     }
-    const texture=new T.DataTexture(data,size,size,T.RGBAFormat);
-    texture.colorSpace=T.SRGBColorSpace;
-    texture.wrapS=texture.wrapT=T.RepeatWrapping;
-    texture.repeat.set(3,2);
-    texture.magFilter=T.LinearFilter;
-    texture.minFilter=T.LinearMipmapLinearFilter;
-    texture.generateMipmaps=true;texture.needsUpdate=true;
-    return texture;
+    function texture(bytes,colorSpace){
+        const map=new T.DataTexture(bytes,width,height,T.RGBAFormat);
+        map.colorSpace=colorSpace;
+        map.wrapS=map.wrapT=T.RepeatWrapping;
+        map.repeat.set(1,1);
+        map.magFilter=T.LinearFilter;
+        map.minFilter=T.LinearMipmapLinearFilter;
+        map.generateMipmaps=true;map.needsUpdate=true;
+        return map;
+    }
+    return {color:texture(data,T.SRGBColorSpace),normal:texture(normalData,T.NoColorSpace)};
 }
