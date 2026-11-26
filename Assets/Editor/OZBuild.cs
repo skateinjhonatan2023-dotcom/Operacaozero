@@ -23,12 +23,12 @@ public static class OZBuild
         OZContent.Import();
         OZRenderSetup.ConfigurePipeline();
         var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
-        var map = AssetDatabase.LoadAssetAtPath<GameObject>(Content + "Island.prefab");
-        var island = map ? (GameObject)PrefabUtility.InstantiatePrefab(map) : OZIsland.Create();
+        // Always generate the current island; an older prefab must not silently override it.
+        var island = OZIsland.Create();
         var points = island.GetComponentsInChildren<Transform>(true)
             .Where(t => t.name.StartsWith("Spawn_", StringComparison.Ordinal))
             .OrderBy(t => t.name, StringComparer.Ordinal).ToArray();
-        if (points.Length < 13 || !island.GetComponentInChildren<Collider>(true))
+        if (points.Length < 40 || !island.GetComponentInChildren<TerrainCollider>(true))
             throw new InvalidOperationException("A ilha precisa de colisões e pelo menos 13 spawns.");
 
         var template = CreateTemplate(out var rifle);
@@ -137,8 +137,8 @@ public static class OZBuild
         RenderSettings.fog = true;
         RenderSettings.fogColor = new Color(.65f, .75f, .8f);
         RenderSettings.fogMode = FogMode.Linear;
-        RenderSettings.fogStartDistance = 120;
-        RenderSettings.fogEndDistance = 430;
+        RenderSettings.fogStartDistance = 290;
+        RenderSettings.fogEndDistance = 850;
     }
 
     [MenuItem("Operation Zero/Validar cena nativa salva")]
@@ -180,8 +180,8 @@ public static class OZBuild
         Prepare();
         ValidateSavedScene();
         PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.Android, "com.operationzero.game");
-        PlayerSettings.bundleVersion = "0.7";
-        PlayerSettings.Android.bundleVersionCode = 7;
+        PlayerSettings.bundleVersion = "0.7.1";
+        PlayerSettings.Android.bundleVersionCode = 8;
         PlayerSettings.Android.minSdkVersion = AndroidSdkVersions.AndroidApiLevel26;
         PlayerSettings.Android.targetArchitectures = AndroidArchitecture.ARM64;
         PlayerSettings.SetScriptingBackend(NamedBuildTarget.Android, ScriptingImplementation.IL2CPP);

@@ -58,7 +58,9 @@ public sealed class OZGame : MonoBehaviour {
  readonly string[] names={"Rifle","SMG","Sniper","Pistola","Escopeta"};readonly int[] capacity={30,24,5,12,6},damage={34,24,95,30,60};readonly float[] rate={.13f,.08f,.85f,.24f,.72f},reach={100,65,220,45,28}; readonly int[] ammo={30,24,5,12,6},reserve={120,144,25,72,30};
  float yaw,pitch=8,vy,nextShot,reloadUntil,slideUntil,startTime; int reloadWeapon; CharacterController cc; AudioSource audioSource; bool finished;
  void Start(){if(!view)view=Camera.main;SetFrameRate(PlayerPrefs.GetInt("OZ_FPS",30));SetQuality(PlayerPrefs.GetInt("OZ_QUALITY",0));Sensitivity=PlayerPrefs.GetFloat("OZ_SENS",1);AdsSensitivity=Mathf.Clamp(PlayerPrefs.GetFloat("OZ_ADS_SENS",.65f),.2f,3f);audioSource=gameObject.AddComponent<AudioSource>();shotEffects=gameObject.AddComponent<OZShotEffects>();shotEffects.Initialize(effectsMaterial);if(!soldier||!rifle||!shotSound||!view||spawns==null||spawns.Length<8){Result="Conteúdo gráfico obrigatório ausente";enabled=false;return;} var terrain=Terrain.activeTerrain;if(terrain)MapRadius=Mathf.Min(terrain.terrainData.size.x,terrain.terrainData.size.z)*.5f;Zone=MapRadius*.9f;doors=FindObjectsByType<OZDoor>(FindObjectsSortMode.None);vehicles=FindObjectsByType<OZVehicle>(FindObjectsSortMode.None);CameraFov=Mathf.Clamp(PlayerPrefs.GetFloat("OZ_FOV",65),55,85);CameraSmooth=Mathf.Clamp(PlayerPrefs.GetFloat("OZ_CAM_SMOOTH",18),6,30);Gyro=SystemInfo.supportsGyroscope&&PlayerPrefs.GetInt("OZ_GYRO",0)==1;if(Gyro)Input.gyro.enabled=true;BotDifficulty=Mathf.Clamp(PlayerPrefs.GetInt("OZ_BOT_DIFFICULTY",1),0,2);AutoSprint=PlayerPrefs.GetInt("OZ_AUTO_SPRINT",0)==1;Player=Spawn(spawns[0].position);cc=Player.GetComponent<CharacterController>();playerBody=Player.GetComponentsInChildren<SkinnedMeshRenderer>(true);bodyShadowModes=new UnityEngine.Rendering.ShadowCastingMode[playerBody.Length];for(int i=0;i<playerBody.Length;i++)bodyShadowModes[i]=playerBody[i].shadowCastingMode;Player.Pose(0,false);UpdateCamera(true);}
- OZActor Spawn(Vector3 pos){var a=Instantiate(soldier,pos,Quaternion.identity);a.gameObject.SetActive(true);a.Setup();var ctrl=a.GetComponent<CharacterController>()??a.gameObject.AddComponent<CharacterController>();ctrl.enabled=true;ctrl.height=1.8f;ctrl.center=Vector3.up*.9f;ctrl.radius=.33f;return a;}
+ public static bool GroundHeight(Vector3 p,out float y){var t=Terrain.activeTerrain;y=0;if(!t)return false;var o=t.transform.position;var s=t.terrainData.size;float u=(p.x-o.x)/s.x,v=(p.z-o.z)/s.z;if(u<0||u>1||v<0||v>1)return false;y=o.y+t.terrainData.GetInterpolatedHeight(u,v);return true;}
+ public static bool RecoverGround(CharacterController c){if(!c||!c.enabled||!GroundHeight(c.transform.position,out float y)||c.transform.position.y>=y-.18f)return false;var p=c.transform.position;c.enabled=false;p.y=y+.08f;c.transform.position=p;c.enabled=true;return true;}
+ OZActor Spawn(Vector3 pos){if(GroundHeight(pos,out float ground))pos.y=Mathf.Max(pos.y,ground+.12f);var a=Instantiate(soldier,pos,Quaternion.identity);a.gameObject.SetActive(true);a.Setup();var ctrl=a.GetComponent<CharacterController>()??a.gameObject.AddComponent<CharacterController>();ctrl.enabled=false;ctrl.height=1.8f;ctrl.center=Vector3.up*.9f;ctrl.radius=.33f;ctrl.skinWidth=.035f;ctrl.stepOffset=.28f;ctrl.minMoveDistance=0;ctrl.enabled=true;return a;}
  public void Begin(Mode m){if(Playing||finished||!Player)return;mode=m;Playing=true;startTime=Time.time;nextDrop=startTime+80;int count=Mathf.Min(spawns.Length-1,m==Mode.BattleRoyale?19:4);for(int i=0;i<count;i++){int index=m==Mode.BattleRoyale?1+i*(spawns.Length-1)/count:i+1;Vector3 p=spawns[index].position;if(m!=Mode.BattleRoyale&&Vector3.Distance(p,spawns[0].position)>130){p=spawns[0].position+Quaternion.Euler(0,i*90,0)*Vector3.forward*35;if(Physics.Raycast(p+Vector3.up*100,Vector3.down,out var ground,200))p=ground.point+Vector3.up*.2f;}var a=Spawn(p);a.gameObject.AddComponent<OZBot>().Init(this,a);bots.Add(a);}
  SpawnLoot();
  if (mode==Mode.BattleRoyale) {
@@ -91,7 +93,7 @@ public sealed class OZGame : MonoBehaviour {
   if (activeQuality && graphicsBudget.Sample(Time.unscaledDeltaTime, Application.targetFrameRate))
    activeQuality.renderScale = graphicsBudget.Scale;
   float dt=Time.deltaTime;
-  if(Driving)Drive(dt);else MovePlayer(dt);
+  if(Driving)Drive(dt);else {if(RecoverGround(cc))vy=0;MovePlayer(dt);if(RecoverGround(cc))vy=0;}
   if (Player.transform.position.y < -30) Player.Damage(100,bypassEquipment:true);
   if (Player.Dead) {
    Finish(false);
@@ -102,7 +104,7 @@ public sealed class OZGame : MonoBehaviour {
   UpdateInteraction();
   if(!Driving)UpdateWeapons();
   else {Trigger=false;Reload=false;GrenadeRequested=false;shotHeld=false;}
-  if (mode==Mode.BattleRoyale) UpdateZone(dt);
+  if (mode==Mode.BattleRoyale && !Deploying) UpdateZone(dt);
   if (Player.Dead) Finish(false);
   else if (mode!=Mode.Treino && bots.TrueForAll(bot=>!bot||bot.Dead)) Finish(true);
  }
@@ -129,8 +131,8 @@ public sealed class OZGame : MonoBehaviour {
   Slide=false;
   bool sliding=Time.time<slideUntil;
   bool low=!Deploying && (crouch||sliding || (cc.height<1.5f && !CanStand()));
-  cc.height=low ? 1.2f : 1.8f;
-  cc.center=Vector3.up*cc.height*.5f;
+  float height=low?1.2f:1.8f;
+  if(!Mathf.Approximately(cc.height,height)){cc.height=height;cc.center=Vector3.up*height*.5f;}
   Vector3 facing=sliding?slideDirection:desired;
   Quaternion bodyHeading=(!FPS&&!Aim&&!Trigger&&facing.sqrMagnitude>.01f)
    ? Quaternion.LookRotation(facing) : heading;
@@ -148,8 +150,9 @@ public sealed class OZGame : MonoBehaviour {
   var collision=cc.Move((movement*speed+Vector3.up*vy)*dt);
   if (sliding && (collision&CollisionFlags.Sides)!=0) slideUntil=0;
   if (vy>0 && (collision&CollisionFlags.Above)!=0) vy=0;
-  if (Deploying && (collision&CollisionFlags.Below)!=0) {
+  if (Deploying && ((collision&CollisionFlags.Below)!=0 || (GroundHeight(Player.transform.position,out float ground)&&Player.transform.position.y<=ground+.15f))) {
    Deploying=false;
+   startTime=Time.time;nextDrop=startTime+80;
    Destroy(canopy);
   }
   Player.Pose(movement.magnitude*speed,Aim,low,Deploying||!cc.isGrounded,reloadUntil>0);

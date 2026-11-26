@@ -8,10 +8,12 @@ public sealed class OZActor : MonoBehaviour {
  public void EquipHelmet() => Helmet = 40;
  public void RestoreArmor() => armor = 50;
  public void Heal() => hp = Mathf.Min(100, hp + 45);
+ Animator rig; Transform visualRoot,leftFoot,rightFoot,leftToe,rightToe; Vector3 baseVisual; bool alignFeet; float visualOffset; bool isLow;
  PlayableGraph graph; AnimationMixerPlayable mix; AnimationClip[] clips; int state; float fireUntil,hitUntil;
- public void Setup(){var a=GetComponentInChildren<Animator>(); if(!a) a=GetComponentInChildren<SkinnedMeshRenderer>().gameObject.AddComponent<Animator>(); a.applyRootMotion=false; clips=new[]{idle,walk,run,aim,fire,death,crouch,crouchWalk,airborne,reload,hit}; graph=PlayableGraph.Create(name); mix=AnimationMixerPlayable.Create(graph,clips.Length); for(int i=0;i<clips.Length;i++){if(!clips[i])continue;var p=AnimationClipPlayable.Create(graph,clips[i]);p.SetApplyFootIK(false);graph.Connect(p,0,mix,i);mix.SetInputWeight(i,i==0?1:0);} AnimationPlayableOutput.Create(graph,"Body",a).SetSourcePlayable(mix);graph.Play();}
+ public void Setup(){var a=GetComponentInChildren<Animator>(); if(!a) a=GetComponentInChildren<SkinnedMeshRenderer>().gameObject.AddComponent<Animator>(); a.applyRootMotion=false; a.cullingMode=AnimatorCullingMode.AlwaysAnimate;rig=a; if(a.isHuman&&a.transform!=transform){visualRoot=a.transform;leftFoot=a.GetBoneTransform(HumanBodyBones.LeftFoot);rightFoot=a.GetBoneTransform(HumanBodyBones.RightFoot);leftToe=a.GetBoneTransform(HumanBodyBones.LeftToes);rightToe=a.GetBoneTransform(HumanBodyBones.RightToes);baseVisual=visualRoot.localPosition;alignFeet=leftFoot&&rightFoot;} clips=new[]{idle,walk,run,aim,fire,death,crouch,crouchWalk,airborne,reload,hit}; graph=PlayableGraph.Create(name); mix=AnimationMixerPlayable.Create(graph,clips.Length); for(int i=0;i<clips.Length;i++){if(!clips[i])continue;var p=AnimationClipPlayable.Create(graph,clips[i]);p.SetApplyFootIK(false);graph.Connect(p,0,mix,i);mix.SetInputWeight(i,i==0?1:0);} AnimationPlayableOutput.Create(graph,"Body",a).SetSourcePlayable(mix);graph.Play();}
  public void Pose(float speed,bool aiming,bool low=false,bool inAir=false,bool reloading=false) {
   if (!graph.IsValid() || !mix.IsValid() || clips==null) return;
+  isLow=low;
   int next = Dead ? 5
    : Time.time < hitUntil && hit ? 10
    : Time.time < fireUntil ? 4
@@ -52,5 +54,6 @@ public sealed class OZActor : MonoBehaviour {
   return Dead;
  }
  void Update(){if(!graph.IsValid())return;for(int i=0;i<clips.Length;i++){if(!clips[i]||clips[i].length<=0||!mix.GetInput(i).IsValid())continue;mix.SetInputWeight(i,Mathf.MoveTowards(mix.GetInputWeight(i),i==state?1:0,Time.deltaTime*12));var p=mix.GetInput(i);bool loop=i<4||(i>=6&&i<=8);if(loop&&p.GetTime()>=clips[i].length)p.SetTime(p.GetTime()%Mathf.Max(.01f,clips[i].length));if(!loop&&p.GetTime()>=clips[i].length)p.SetTime(clips[i].length-.001f);}}
+ void LateUpdate(){if(!alignFeet||Dead||!visualRoot||!leftFoot||!rightFoot)return;float feet=Mathf.Min(leftFoot.position.y,rightFoot.position.y);if(leftToe)feet=Mathf.Min(feet,leftToe.position.y);if(rightToe)feet=Mathf.Min(feet,rightToe.position.y);float desired=transform.position.y+(isLow?.04f:.065f);float delta=desired-feet;float target=Mathf.Clamp(visualOffset+delta,-.8f,1.5f);visualOffset=Mathf.Lerp(visualOffset,target,1f-Mathf.Exp(-18f*Time.deltaTime));visualRoot.localPosition=baseVisual+Vector3.up*visualOffset;}
  void OnDestroy(){if(graph.IsValid())graph.Destroy();}
 }

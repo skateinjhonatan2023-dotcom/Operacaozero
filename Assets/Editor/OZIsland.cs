@@ -10,7 +10,7 @@ internal static class OZIsland
     {
         var asphalt = Surface("Asphalt", "asphalt.jpg", Color.white);
         var concrete = Surface("Concrete", "concrete.jpg", Color.white);
-        var terrainData = AssetDatabase.LoadAssetAtPath<TerrainData>(Generated + "IlhaZeroTerrain.asset");
+        var terrainData = AssetDatabase.LoadAssetAtPath<TerrainData>(Generated + "IlhaZeroTerrainV071.asset");
         if (!terrainData)
         {
             terrainData = new TerrainData { heightmapResolution = 513, size = new Vector3(2000, 100, 2000) };
@@ -35,7 +35,7 @@ internal static class OZIsland
                 heights[z,x] = Mathf.Lerp(y, 1f, coast)/100f;
             }
             terrainData.SetHeights(0, 0, heights);
-            AssetDatabase.CreateAsset(terrainData, Generated + "IlhaZeroTerrain.asset");
+            AssetDatabase.CreateAsset(terrainData, Generated + "IlhaZeroTerrainV071.asset");
         }
 
         var root = new GameObject("Ilha Zero — 2 km");
@@ -64,10 +64,15 @@ internal static class OZIsland
         terrainData.terrainLayers = new[] { layer };
         EditorUtility.SetDirty(layer);
         EditorUtility.SetDirty(terrainData);
-        terrain.heightmapPixelError = 12;
-        terrain.drawInstanced = true;
+        terrain.heightmapPixelError = 4;
+        terrain.drawInstanced = false; // Keep the Android terrain mesh on the standard rendering path.
+        terrain.basemapDistance=500;
+        terrainData.SyncHeightmap();
+        terrain.Flush();
 
+        PaintGround(terrain,layer);
         BuildDistricts(root.transform, terrain, concrete, asphalt);
+        BuildTown(root.transform,terrain,concrete,asphalt);
         PlaceRocks(root.transform, terrain);
         BuildVehicles(root.transform,terrain);
         var water = Block(root.transform, "Mar", new Vector3(0, 0, 0), new Vector3(2050, .15f, 2050),
@@ -106,7 +111,7 @@ internal static class OZIsland
             // Four clear spawn points per district; the player and bots are selected by mode.
             for(int k=0;k<4;k++)
             {
-                var point=center+new Vector3((k%2==0?-1:1)*18,0,(k<2?-1:1)*18);
+                var point=center+new Vector3((k%2==0?-1:1)*13,0,(k<2?-1:1)*13);
                 point.y=Height(terrain,point)+.2f;
                 var spawn=new GameObject($"Spawn_{(i==1?0:i==0?1:i):00}_{k:00}").transform;
                 spawn.SetParent(region,false); spawn.position=point;
@@ -149,6 +154,81 @@ internal static class OZIsland
         }
     }
 
+    static void PaintGround(Terrain t,TerrainLayer grass)
+    {
+        var dirt=AssetDatabase.LoadAssetAtPath<TerrainLayer>(Generated+"Dirt071.terrainlayer");
+        if(!dirt){dirt=new TerrainLayer();AssetDatabase.CreateAsset(dirt,Generated+"Dirt071.terrainlayer");}
+        dirt.diffuseTexture=AssetDatabase.LoadAssetAtPath<Texture2D>("Assets/Content/Raw/concrete.jpg");
+        dirt.normalMapTexture=AssetDatabase.LoadAssetAtPath<Texture2D>("Assets/Content/Raw/concrete-normal.jpg");
+        dirt.diffuseRemapMax=new Vector4(.63f,.52f,.39f,1);dirt.tileSize=new Vector2(8,8);
+        t.terrainData.terrainLayers=new[]{grass,dirt};t.terrainData.alphamapResolution=256;
+        var weights=new float[256,256,2];
+        for(int z=0;z<256;z++)for(int x=0;x<256;x++){
+            float u=x/255f,v=z/255f;var pos=new Vector2(u*2000-1000,v*2000-1000);
+            float d=Mathf.Clamp01((t.terrainData.GetSteepness(u,v)-14)/30);
+            d=Mathf.Max(d,Mathf.SmoothStep(0,1,Mathf.InverseLerp(830,980,Mathf.Max(Mathf.Abs(pos.x),Mathf.Abs(pos.y)))));
+            d=Mathf.Max(d,Mathf.PerlinNoise(u*35,v*35)*.25f);
+            weights[z,x,0]=1-d;weights[z,x,1]=d;
+        }
+        t.terrainData.SetAlphamaps(0,0,weights);EditorUtility.SetDirty(t.terrainData);EditorUtility.SetDirty(dirt);
+    }
+    static void BuildTown(Transform parent,Terrain t,Material concrete,Material asphalt)
+    {
+        var walls=Solid("TownWall071",new Color(.66f,.51f,.37f));
+        var roof=Solid("TownRoof071",new Color(.35f,.16f,.12f));
+        var metal=Solid("TownMetal071",new Color(.25f,.34f,.36f));
+        var wood=Solid("TownWood071",new Color(.32f,.23f,.14f));
+        var leaf=Solid("TownLeaf071",new Color(.16f,.34f,.12f));
+        var rng=new System.Random(716);
+        // Compact village blocks, alleys and sightline breaks around the first landing area.
+        foreach(var d in new[]{new Vector2(0,0),Districts[5],Districts[9]})
+        {
+            var area=new GameObject("Bairro habitável").transform;area.SetParent(parent,false);
+            for(int row=-1;row<=1;row++)for(int col=-1;col<=1;col++)
+            {
+                if(row==0&&col==0)continue;
+                var site=new Vector3(d.x+col*28,0,d.y+row*28);
+                site.y=Height(t,site);
+                House(area,site,concrete,walls,roof,wood);
+            }
+            for(int k=0;k<20;k++){
+                var q=new Vector3(d.x+rng.Next(-85,86),0,d.y+rng.Next(-85,86));
+                if(Mathf.Abs(q.x-d.x)<46&&Mathf.Abs(q.z-d.y)<46)continue;
+                Tree(area,t,q,wood,leaf,4+(float)rng.NextDouble()*4);
+            }
+        }
+        var baseSite=new Vector3(590,0,430);baseSite.y=Height(t,baseSite);
+        for(int k=0;k<4;k++){
+            var q=baseSite+new Vector3(-37+k*24,0,38);q.y=Height(t,q);
+            Block(parent,"Contêiner industrial",q+Vector3.up*1.3f,new Vector3(10,2.6f,2.6f),metal);
+            for(int j=0;j<5;j++)Block(parent,"Nervura",q+new Vector3(-4+j*2,1.3f,1.34f),new Vector3(.15f,2.6f,.12f),metal);
+        }
+        // Cover the spaces between districts with lightweight vegetation clusters.
+        for(int k=0;k<220;k++){
+            var q=new Vector3(rng.Next(-805,806),0,rng.Next(-805,806));
+            bool near=false;foreach(var d in Districts)if(Vector2.Distance(new Vector2(q.x,q.z),d)<110){near=true;break;}
+            if(!near && t.terrainData.GetSteepness((q.x+1000)/2000,(q.z+1000)/2000)<30)Tree(parent,t,q,wood,leaf,3.5f+(float)rng.NextDouble()*4);
+        }
+    }
+    static void House(Transform parent,Vector3 s,Material concrete,Material wall,Material roof,Material wood)
+    {
+        var h=new GameObject("Casa explorável").transform;h.SetParent(parent,false);h.position=s;
+        Block(h,"Fundação",s+Vector3.up*.12f,new Vector3(8,.24f,7),concrete);
+        Block(h,"Fundo",s+new Vector3(0,1.65f,3.4f),new Vector3(8,3.3f,.22f),wall);
+        foreach(int side in new[]{-1,1}){
+            Block(h,"Frente",s+new Vector3(side*2.55f,1.65f,-3.4f),new Vector3(2.9f,3.3f,.22f),wall);
+            Block(h,"Peitoril",s+new Vector3(side*3.9f,.6f,0),new Vector3(.22f,1.2f,7),wall);
+            Block(h,"Verga",s+new Vector3(side*3.9f,2.85f,0),new Vector3(.22f,.9f,7),wall);
+            for(int k=-1;k<=1;k++)Block(h,"Coluna",s+new Vector3(side*3.9f,1.8f,k*3),new Vector3(.22f,1.2f,1.1f),wall);
+            var slope=Block(h,"Telha",s+new Vector3(side*2.05f,3.85f,0),new Vector3(4.8f,.18f,7.6f),roof);
+            slope.rotation=Quaternion.Euler(0,0,-side*18);
+        }
+        Block(h,"Verga entrada",s+new Vector3(0,2.8f,-3.4f),new Vector3(2.2f,1,.22f),wall);
+        Block(h,"Bancada",s+new Vector3(2,.55f,2),new Vector3(2.4f,1.1f,.75f),wood);
+        var hinge=new GameObject("Porta").transform;hinge.SetParent(h,false);hinge.position=s+new Vector3(-1.05f,0,-3.5f);
+        var door=Block(hinge,"Madeira",hinge.position+new Vector3(1,1.15f,0),new Vector3(2,2.3f,.12f),wood);
+        GameObjectUtility.SetStaticEditorFlags(door.gameObject,0);hinge.gameObject.AddComponent<OZDoor>();
+    }
     static void BuildVehicles(Transform parent,Terrain terrain)
     {
         var body=Solid("VehicleMetal",new Color(.25f,.30f,.22f),.4f);
@@ -209,7 +289,7 @@ internal static class OZIsland
     }
 
     static float Height(Terrain terrain, Vector3 position) =>
-        terrain.SampleHeight(position) + terrain.transform.position.y;
+        terrain.terrainData.GetInterpolatedHeight(Mathf.Clamp01((position.x-terrain.transform.position.x)/terrain.terrainData.size.x), Mathf.Clamp01((position.z-terrain.transform.position.z)/terrain.terrainData.size.z)) + terrain.transform.position.y;
 
     static Material Surface(string name, string textureName, Color tint)
     {
@@ -282,7 +362,7 @@ internal static class OZIsland
         for (int i = 0; i < 20; i++)
         {
             float angle = i * 2 * Mathf.PI / 20;
-            float radius = 210 + (i % 4) * 145;
+            float radius = 110 + (i % 4) * 145;
             Vector3 point = new Vector3(Mathf.Cos(angle) * radius, 0, Mathf.Sin(angle) * radius);
             point.y = Height(terrain, point) - .3f;
             var root = new GameObject("Afloramento");

@@ -22,10 +22,10 @@ public sealed class OZGraphicsBudget
     }
 
     static readonly Profile[] Profiles = {
-        new Profile(.62f, .80f, 24, 170, 512, 1),
-        new Profile(.72f, .92f, 48, 230, 1024, 2),
-        new Profile(.80f, 1f, 80, 320, 1024, 2),
-        new Profile(.86f, 1.08f, 110, 430, 2048, 4)
+        new Profile(.62f, .80f, 24, 430, 512, 1),
+        new Profile(.72f, .92f, 48, 560, 1024, 2),
+        new Profile(.80f, 1f, 80, 700, 1024, 2),
+        new Profile(.86f, 1.08f, 110, 900, 2048, 4)
     };
 
     public Profile Settings { get; private set; }
