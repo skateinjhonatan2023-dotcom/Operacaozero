@@ -21,7 +21,7 @@ public static class OZBuild
         if (!AssetDatabase.IsValidFolder(Content + "Generated"))
             AssetDatabase.CreateFolder("Assets/Content", "Generated");
         OZContent.Import();
-        ConfigurePipeline();
+        OZRenderSetup.ConfigurePipeline();
         var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
         var map = AssetDatabase.LoadAssetAtPath<GameObject>(Content + "Island.prefab");
         var island = map ? (GameObject)PrefabUtility.InstantiatePrefab(map) : OZIsland.Create();
@@ -36,6 +36,7 @@ public static class OZBuild
         if (!sound) throw new InvalidOperationException("Som de disparo ausente.");
         var camera = CreateCamera();
         SetupLighting();
+        OZRenderSetup.Environment();
 
         var root = new GameObject("Operation Zero");
         var game = root.AddComponent<OZGame>();
@@ -112,26 +113,6 @@ public static class OZBuild
         return clip;
     }
 
-    static void ConfigurePipeline()
-    {
-        const string rendererPath = Content + "URPRenderer.asset";
-        const string pipelinePath = Content + "URP.asset";
-        var renderer = AssetDatabase.LoadAssetAtPath<UniversalRendererData>(rendererPath);
-        if (!renderer)
-        {
-            renderer = ScriptableObject.CreateInstance<UniversalRendererData>();
-            AssetDatabase.CreateAsset(renderer, rendererPath);
-        }
-        var pipeline = AssetDatabase.LoadAssetAtPath<UniversalRenderPipelineAsset>(pipelinePath);
-        if (!pipeline)
-        {
-            pipeline = UniversalRenderPipelineAsset.Create(renderer);
-            AssetDatabase.CreateAsset(pipeline, pipelinePath);
-        }
-        GraphicsSettings.defaultRenderPipeline = pipeline;
-        QualitySettings.renderPipeline = pipeline;
-    }
-
     static Camera CreateCamera()
     {
         var root = new GameObject("Camera");
@@ -160,12 +141,36 @@ public static class OZBuild
         RenderSettings.fogEndDistance = 430;
     }
 
+    [MenuItem("Operation Zero/Validar cena nativa salva")]
+    public static void ValidateSavedScene()
+    {
+        var scene = EditorSceneManager.OpenScene(Scene, OpenSceneMode.Single);
+        var roots = scene.GetRootGameObjects();
+        var game = roots.SelectMany(root => root.GetComponentsInChildren<OZGame>(true)).Single();
+        var lobby = game.GetComponent<OZLobby>();
+        if (!(GraphicsSettings.currentRenderPipeline is UniversalRenderPipelineAsset) ||
+            !RenderSettings.skybox || !RenderSettings.customReflectionTexture)
+            throw new InvalidOperationException("A cena salva perdeu o URP, o céu ou o reflexo.");
+        var volumes = roots.SelectMany(root => root.GetComponentsInChildren<Volume>(true));
+        if (!volumes.Any(v => v.isGlobal && v.sharedProfile && v.sharedProfile.TryGet<Tonemapping>(out _)))
+            throw new InvalidOperationException("Perfil de cor da ilha ausente.");
+        if (!lobby || !lobby.stage || !lobby.stage.animator || !lobby.stage.idle ||
+            !game.view || !game.soldier || !game.rifle || !game.shotSound)
+            throw new InvalidOperationException("Referência de gameplay ou lobby perdida na serialização.");
+        var mesh = game.soldier.GetComponentsInChildren<SkinnedMeshRenderer>(true);
+        if (!mesh.Any(r => r.sharedMesh && r.sharedMesh.vertexCount > 0 && r.bones.Length > 0) ||
+            !game.rifle.GetComponentsInChildren<MeshFilter>(true).Any(f => f.sharedMesh && f.sharedMesh.vertexCount > 0))
+            throw new InvalidOperationException("Operador ou arma sem geometria importada.");
+        Debug.Log("Operation Zero: referências do motor, cena, operador e rifle validadas.");
+    }
+
     [MenuItem("Operation Zero/Compilar APK de testes")]
     public static void Android()
     {
         if (!BuildPipeline.IsBuildTargetSupported(BuildTargetGroup.Android, BuildTarget.Android))
             throw new InvalidOperationException("Instale Android Build Support, SDK, NDK e OpenJDK.");
         Prepare();
+        ValidateSavedScene();
         PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.Android, "com.operationzero.game");
         PlayerSettings.bundleVersion = "0.6";
         PlayerSettings.Android.bundleVersionCode = 6;

@@ -1,5 +1,7 @@
 # Operation Zero
 
+A revisão V0.6 do motor nativo está em validação. A auditoria reúne o inventário das três implementações, as mudanças de URP, os testes executados e as dependências para compilar. [Auditoria da V0.6](AUDITORIA-V06.md)
+
 Projeto Unity 6 baseado no arquivo REV07. Esta revisão prepara o fluxo offline para validação no Unity e no Android. Consulte o [relatório de validação](VALIDACAO.md) para ver o que foi testado e o que falta.
 
 ## Abrir o projeto

@@ -408,7 +408,7 @@ public sealed class OZLobby : MonoBehaviour
     void OpenSettings()
     {
         var panel = OpenDialog("AJUSTES", "Perfis gráficos, limite de quadros e sensibilidade.");
-        var qualityNames = new[] { "BAIXO", "MÉDIO", "ALTO", "ULTRA" };
+        var qualityNames = new[] { "LEVE", "MÉDIA", "ALTA", "ULTRA" };
         var quality = new Button[qualityNames.Length];
         int selected = PlayerPrefs.GetInt("OZ_QUALITY", 0);
         for (int index = 0; index < quality.Length; index++)
@@ -424,18 +424,21 @@ public sealed class OZLobby : MonoBehaviour
             quality[index].interactable = index != selected;
         }
         int fps = Application.targetFrameRate;
-        Button fps30 = null, fps60 = null;
-        void ChangeFrameRate(int value)
+        var rates = game.Supports90Fps ? new[] { 30, 60, 90 } : new[] { 30, 60 };
+        var rateButtons = new Button[rates.Length];
+        float width = 480f / rates.Length;
+        for (int i = 0; i < rates.Length; i++)
         {
-            game.SetFrameRate(value);
-            fps30.interactable = value != 30;
-            fps60.interactable = value != 60;
-            PlayerPrefs.Save();
+            int rate = rates[i];
+            rateButtons[i] = ui.Button(panel, rate + " FPS", 25 + i * width, 181, width - 10, 48, () =>
+            {
+                game.SetFrameRate(rate);
+                for (int j = 0; j < rates.Length; j++)
+                    rateButtons[j].interactable = rates[j] != Application.targetFrameRate;
+                PlayerPrefs.Save();
+            });
+            rateButtons[i].interactable = rate != fps;
         }
-        fps30 = ui.Button(panel, "30 FPS", 25, 181, 230, 48, () => ChangeFrameRate(30));
-        fps60 = ui.Button(panel, "60 FPS", 265, 181, 230, 48, () => ChangeFrameRate(60));
-        fps30.interactable = fps != 30;
-        fps60.interactable = fps != 60;
 
         var sensitivity = ui.Label(panel, "", 25, 240, 470, 35, 22, Muted);
         void AdjustSensitivity(float delta)

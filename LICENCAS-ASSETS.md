@@ -22,3 +22,9 @@ A copa do paraquedas, o terreno, os armazéns, o loot e os efeitos de zona e tra
 | Barlow Condensed | [The Barlow Project Authors](https://github.com/jpt/barlow), SIL OFL 1.1. Pesos regular, negrito e extra-negrito itálico convertidos de WOFF para TTF. Licença acompanhada no projeto e acessível no lobby. |
 | Cenário e cartões | Panorama original gerado para Operação Zero. Os cartões de operador e rifle derivam de renderizações dos modelos creditados e o cartão de pacotes deriva do panorama. |
 | Marca, painéis e tecido | Grafismos, textura de tecido e normal criados para Operação Zero. |
+
+## Ambiente nativo da V0.6
+
+O HDRI Kloofendal 48d Partly Cloudy (Pure Sky) é de Greg Zaal, com edição do céu por Jarod Guest, sob CC0. O projeto inclui o HDR de 1K e o importa como cubemap para o céu e os reflexos. [Fonte e licença](https://polyhaven.com/a/kloofendal_48d_partly_cloudy_puresky)
+
+Os mapas normais OpenGL de 1K vêm das mesmas coleções da Poly Haven usadas nas superfícies difusas. O importador marca os três como mapas normais e configura ASTC para Android. Os arquivos originais e os endereços individuais constam no manifesto de conteúdo. [Asphalt 02](https://polyhaven.com/a/asphalt_02) · [Concrete Wall 008](https://polyhaven.com/a/concrete_wall_008) · [Grass Ground](https://polyhaven.com/a/grass_ground)

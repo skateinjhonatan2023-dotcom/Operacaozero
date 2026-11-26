@@ -51,6 +51,8 @@ internal static class OZIsland
             AssetDatabase.CreateAsset(layer, Generated + "Ground.terrainlayer");
         }
         layer.diffuseTexture = AssetDatabase.LoadAssetAtPath<Texture2D>("Assets/Content/Raw/grass.jpg");
+        layer.normalMapTexture = AssetDatabase.LoadAssetAtPath<Texture2D>("Assets/Content/Raw/grass-normal.jpg");
+        layer.normalScale = .68f;
         layer.tileSize = new Vector2(6, 6);
         terrainData.terrainLayers = new[] { layer };
         EditorUtility.SetDirty(layer);
@@ -100,6 +102,10 @@ internal static class OZIsland
             AssetDatabase.CreateAsset(material, path);
         }
         material.mainTexture = AssetDatabase.LoadAssetAtPath<Texture2D>("Assets/Content/Raw/" + textureName);
+        string normalPath = "Assets/Content/Raw/" + System.IO.Path.GetFileNameWithoutExtension(textureName) + "-normal.jpg";
+        material.SetTexture("_BumpMap", AssetDatabase.LoadAssetAtPath<Texture2D>(normalPath));
+        material.SetFloat("_BumpScale", .72f);
+        material.EnableKeyword("_NORMALMAP");
         material.color = tint;
         material.SetFloat("_Smoothness", .13f);
         material.enableInstancing = true;
@@ -182,6 +188,29 @@ internal static class OZIsland
         block.transform.SetParent(parent);
         block.transform.position = position;
         block.transform.localScale = scale;
+        // Size the UVs in metres. A road slab and a warehouse wall share texel density.
+        var filter = block.GetComponent<MeshFilter>();
+        var meshKey = FormattableString.Invariant($"Block_{scale.x:G6}_{scale.y:G6}_{scale.z:G6}");
+        var meshPath = Generated + meshKey + ".asset";
+        var surface = AssetDatabase.LoadAssetAtPath<Mesh>(meshPath);
+        if (!surface)
+        {
+            surface = UnityEngine.Object.Instantiate(filter.sharedMesh);
+            surface.name = meshKey;
+            var uv = surface.uv;
+            var normals = surface.normals;
+            var tangents = surface.tangents;
+            for (int i = 0; i < uv.Length; i++)
+            {
+                Vector3 tangent = tangents[i];
+                Vector3 bitangent = Vector3.Cross(normals[i], tangent);
+                uv[i] = Vector2.Scale(uv[i], new Vector2(Vector3.Scale(tangent, scale).magnitude,
+                    Vector3.Scale(bitangent, scale).magnitude) / 3f);
+            }
+            surface.uv = uv;
+            AssetDatabase.CreateAsset(surface, meshPath);
+        }
+        filter.sharedMesh = surface;
         block.GetComponent<Renderer>().sharedMaterial = material;
         GameObjectUtility.SetStaticEditorFlags(block, StaticEditorFlags.BatchingStatic |
             StaticEditorFlags.OccludeeStatic | StaticEditorFlags.OccluderStatic);

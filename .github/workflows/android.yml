@@ -1,7 +1,7 @@
 name: Android development build
 on:
   push:
-    branches: [codex/v06-lobby-unity]
+    branches: [codex/v06-lobby-unity, codex/v06-motor-nativo]
   workflow_dispatch:
 permissions:
   contents: read
@@ -13,6 +13,19 @@ jobs:
       - uses: actions/checkout@v4
       - name: Validate imported assets
         run: python3 Tools/preflight.py
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+      - name: Test the graphics budget
+        run: dotnet run --project Tools/GraphicsTests
+      - name: Test the legacy server
+        working-directory: LegacyServer
+        run: |
+          python3 -m venv "$RUNNER_TEMP/oz-server"
+          "$RUNNER_TEMP/oz-server/bin/pip" install -r requirements.txt
+          for suite in test_server.py test_br.py test_security.py; do
+            "$RUNNER_TEMP/oz-server/bin/python" "$suite"
+          done
       - name: Compile APK with Unity
         uses: game-ci/unity-builder@v4
         env:

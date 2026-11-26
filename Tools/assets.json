@@ -241,5 +241,33 @@
     "sha256": "9427db5814f3f9dd99fa9d52e98c4a3a6b058f1ce0985cc565521c0b37d97fad",
     "source": "Assets/Content/Lobby/Creditos.txt",
     "license": "Produzido para Operação Zero"
+  },
+  "Assets/Content/Raw/asphalt-normal.jpg": {
+    "bytes": 1240122,
+    "sha256": "42a1c381b53204e83a982db2864479a30bc127bbdeebb1006f8ee51bff099df3",
+    "source": "https://polyhaven.com/a/asphalt_02",
+    "license": "CC0-1.0",
+    "download": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/asphalt_02/asphalt_02_nor_gl_1k.jpg"
+  },
+  "Assets/Content/Raw/concrete-normal.jpg": {
+    "bytes": 511519,
+    "sha256": "83cd3fa2c7cbf4c81402386065daf8fa6f72e1f1f77e02ccb1eedb28496909ae",
+    "source": "https://polyhaven.com/a/concrete_wall_008",
+    "license": "CC0-1.0",
+    "download": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/concrete_wall_008/concrete_wall_008_nor_gl_1k.jpg"
+  },
+  "Assets/Content/Raw/grass-normal.jpg": {
+    "bytes": 1310516,
+    "sha256": "7000e2ccd479bb7b66dcdf4faef7b47554324566886314ca620cbf03e274e826",
+    "source": "https://polyhaven.com/a/grass_ground",
+    "license": "CC0-1.0",
+    "download": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/grass_ground/grass_ground_nor_gl_1k.jpg"
+  },
+  "Assets/Content/Environment/CoastalSky.hdr": {
+    "bytes": 1435119,
+    "sha256": "fd94c84997b8a3c353b62c2125a9b44e19509956986a126e472684432a02d798",
+    "source": "https://polyhaven.com/a/kloofendal_48d_partly_cloudy_puresky",
+    "license": "CC0-1.0",
+    "download": "https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/kloofendal_48d_partly_cloudy_puresky_1k.hdr"
   }
 }

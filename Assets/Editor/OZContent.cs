@@ -21,6 +21,8 @@ internal static class OZContent
         ConfigureTexture("Assets/Content/Raw/asphalt.jpg", 1024);
         ConfigureTexture("Assets/Content/Raw/concrete.jpg", 1024);
         ConfigureTexture("Assets/Content/Raw/grass.jpg", 1024);
+        foreach (var surface in new[] { "asphalt", "concrete", "grass" })
+            ConfigureTexture("Assets/Content/Raw/" + surface + "-normal.jpg", 1024, TextureImporterType.NormalMap);
         ConfigureTexture(Weapon + "M4A1_Base_Color.png", 512);
         ConfigureTexture(Weapon + "M4A1_Normal.png", 512, TextureImporterType.NormalMap);
         ConfigureTexture(Weapon + "M4A1_MetalSmooth.png", 512, linear: true);

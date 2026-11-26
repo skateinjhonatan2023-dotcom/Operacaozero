@@ -19,6 +19,7 @@ public sealed class OZGame : MonoBehaviour {
  OZShotEffects shotEffects;
  UniversalRenderPipelineAsset activeQuality;
  UnityEngine.Rendering.RenderPipelineAsset previousQuality;
+ readonly OZGraphicsBudget graphicsBudget = new OZGraphicsBudget();
  float nextZoneDraw;
  public bool Deploying { get; private set; }
  public int WeaponCount => names.Length;
@@ -28,7 +29,7 @@ public sealed class OZGame : MonoBehaviour {
  public int Weapon { get; private set; } public int Ammo=>ammo[Weapon]; public int Reserve=>reserve[Weapon]; public string WeaponName=>names[Weapon]; public int XP=>PlayerPrefs.GetInt("OZ_XP",0);
  readonly string[] names={"Rifle","SMG","Sniper","Pistola"};readonly int[] capacity={30,24,5,12},damage={34,24,95,30};readonly float[] rate={.13f,.08f,.85f,.24f},reach={100,65,220,45}; readonly int[] ammo={30,24,5,12},reserve={120,144,25,72};
  float yaw,pitch=8,vy,nextShot,reloadUntil,slideUntil,startTime; int reloadWeapon; CharacterController cc; AudioSource audioSource; bool finished;
- void Start(){Application.targetFrameRate=PlayerPrefs.GetInt("OZ_FPS",30);SetQuality(PlayerPrefs.GetInt("OZ_QUALITY",0));Sensitivity=PlayerPrefs.GetFloat("OZ_SENS",1);if(!view)view=Camera.main;audioSource=gameObject.AddComponent<AudioSource>();shotEffects=gameObject.AddComponent<OZShotEffects>();shotEffects.Initialize(effectsMaterial);if(!soldier||!rifle||!shotSound||!view||spawns==null||spawns.Length<8){Result="Conteúdo gráfico obrigatório ausente";enabled=false;return;} Player=Spawn(spawns[0].position);cc=Player.GetComponent<CharacterController>();Player.Pose(0,false);UpdateCamera(true);}
+ void Start(){if(!view)view=Camera.main;SetFrameRate(PlayerPrefs.GetInt("OZ_FPS",30));SetQuality(PlayerPrefs.GetInt("OZ_QUALITY",0));Sensitivity=PlayerPrefs.GetFloat("OZ_SENS",1);audioSource=gameObject.AddComponent<AudioSource>();shotEffects=gameObject.AddComponent<OZShotEffects>();shotEffects.Initialize(effectsMaterial);if(!soldier||!rifle||!shotSound||!view||spawns==null||spawns.Length<8){Result="Conteúdo gráfico obrigatório ausente";enabled=false;return;} Player=Spawn(spawns[0].position);cc=Player.GetComponent<CharacterController>();Player.Pose(0,false);UpdateCamera(true);}
  OZActor Spawn(Vector3 pos){var a=Instantiate(soldier,pos,Quaternion.identity);a.gameObject.SetActive(true);a.Setup();var ctrl=a.GetComponent<CharacterController>()??a.gameObject.AddComponent<CharacterController>();ctrl.enabled=true;ctrl.height=1.8f;ctrl.center=Vector3.up*.9f;ctrl.radius=.33f;return a;}
  public void Begin(Mode m){if(Playing||finished||!Player)return;mode=m;Playing=true;startTime=Time.time;for(int i=1;i<Mathf.Min(spawns.Length,m==Mode.Combate?5:13);i++){var a=Spawn(spawns[i].position);a.gameObject.AddComponent<OZBot>().Init(this,a);bots.Add(a);}
  SpawnLoot();
@@ -59,6 +60,8 @@ public sealed class OZGame : MonoBehaviour {
    Finish(false);
    return;
   }
+  if (activeQuality && graphicsBudget.Sample(Time.unscaledDeltaTime, Application.targetFrameRate))
+   activeQuality.renderScale = graphicsBudget.Scale;
   float dt=Time.deltaTime;
   MovePlayer(dt);
   if (Player.transform.position.y < -30) Player.Damage(100,bypassEquipment:true);
@@ -238,8 +241,10 @@ public sealed class OZGame : MonoBehaviour {
    default: return false;
   }
  }
+ public bool Supports90Fps => Screen.currentResolution.refreshRateRatio.value >= 89.5;
  public void SetFrameRate(int fps) {
-  Application.targetFrameRate = fps == 60 ? 60 : 30;
+  Application.targetFrameRate = fps >= 90 && Supports90Fps ? 90 : fps >= 60 ? 60 : 30;
+  graphicsBudget.ResetWindow();
   PlayerPrefs.SetInt("OZ_FPS", Application.targetFrameRate);
  }
  void Finish(bool win){if(finished)return;Player.Pose(0,false);finished=true;Playing=false;Result=win?"VITÓRIA":"ELIMINADO";PlayerPrefs.SetInt("OZ_XP",XP+Kills*100+(win?300:0));PlayerPrefs.Save();}
@@ -250,9 +255,21 @@ public sealed class OZGame : MonoBehaviour {
    activeQuality=Instantiate(source);
    QualitySettings.renderPipeline=activeQuality;
   }
+  graphicsBudget.Reset(level);
+  var profile = graphicsBudget.Settings;
   if (activeQuality) {
-   activeQuality.renderScale=new[]{.7f,.82f,1f,1.15f}[level];
-   activeQuality.shadowDistance=new[]{25f,55f,90f,135f}[level];
+   activeQuality.renderScale = graphicsBudget.Scale;
+   activeQuality.shadowDistance = profile.ShadowDistance;
+   activeQuality.mainLightShadowmapResolution = profile.ShadowPixels;
+   activeQuality.msaaSampleCount = profile.Samples;
+  }
+  if (view) {
+   view.farClipPlane = profile.ViewDistance;
+   view.allowMSAA = profile.Samples > 1;
+   view.allowHDR = level >= 2;
+   var data = view.GetUniversalAdditionalCameraData();
+   data.renderPostProcessing = level >= 2;
+   data.SetRenderer(level >= 2 ? 1 : 0);
   }
   QualitySettings.vSyncCount=0;
   PlayerPrefs.SetInt("OZ_QUALITY",level);
