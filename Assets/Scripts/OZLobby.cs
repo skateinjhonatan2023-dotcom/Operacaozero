@@ -495,9 +495,21 @@ public sealed class OZLobby : MonoBehaviour
         ui.Button(panel, "−", 311, 236, 86, 45, () => AdjustSensitivity(-.1f));
         ui.Button(panel, "+", 409, 236, 86, 45, () => AdjustSensitivity(.1f));
 
-        var endpoint = ui.Input(panel, "Servidor HTTPS", server, 25, 303, 470, 48, InputField.ContentType.Standard, 220);
-        var notice = ui.Label(panel, "", 25, 358, 470, 36, 19, Gold);
-        ui.Button(panel, "SALVAR SERVIDOR", 25, 400, 470, 53, () =>
+        var ads = ui.Label(panel, "", 25, 281, 282, 35, 22, Muted);
+        void AdjustAds(float delta)
+        {
+            game.AdsSensitivity = Mathf.Clamp(Mathf.Round((game.AdsSensitivity + delta) * 10) / 10f, .2f, 3f);
+            ads.text = $"Sensibilidade ADS   {game.AdsSensitivity:0.0}";
+            PlayerPrefs.SetFloat("OZ_ADS_SENS", game.AdsSensitivity);
+            PlayerPrefs.Save();
+        }
+        ads.text = $"Sensibilidade ADS   {game.AdsSensitivity:0.0}";
+        ui.Button(panel, "−", 311, 281, 86, 40, () => AdjustAds(-.1f));
+        ui.Button(panel, "+", 409, 281, 86, 40, () => AdjustAds(.1f));
+
+        var endpoint = ui.Input(panel, "Servidor HTTPS", server, 25, 327, 470, 43, InputField.ContentType.Standard, 220);
+        var notice = ui.Label(panel, "", 25, 372, 470, 36, 19, Gold);
+        ui.Button(panel, "SALVAR SERVIDOR", 25, 410, 470, 53, () =>
         {
             string value = endpoint.text.Trim().TrimEnd('/');
             if (value.Length > 0 && !OZAccount.ValidServer(value))
