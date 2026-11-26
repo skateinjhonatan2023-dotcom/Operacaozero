@@ -164,8 +164,8 @@ public static class OZBuild
         Debug.Log("Operation Zero: referências do motor, cena, operador e rifle validadas.");
     }
 
-    [MenuItem("Operation Zero/Compilar APK de testes")]
-    public static void Android()
+    // Unity Build Automation: configure OZBuild.CloudPrepare as the pre-export method.
+    public static void CloudPrepare()
     {
         if (!BuildPipeline.IsBuildTargetSupported(BuildTargetGroup.Android, BuildTarget.Android))
             throw new InvalidOperationException("Instale Android Build Support, SDK, NDK e OpenJDK.");
@@ -178,6 +178,13 @@ public static class OZBuild
         PlayerSettings.Android.targetArchitectures = AndroidArchitecture.ARM64;
         PlayerSettings.SetScriptingBackend(NamedBuildTarget.Android, ScriptingImplementation.IL2CPP);
         EditorUserBuildSettings.buildAppBundle = false;
+        AssetDatabase.SaveAssets();
+    }
+
+    [MenuItem("Operation Zero/Compilar APK de testes")]
+    public static void Android()
+    {
+        CloudPrepare();
         Directory.CreateDirectory("Builds");
         var report = BuildPipeline.BuildPlayer(new BuildPlayerOptions
         {
