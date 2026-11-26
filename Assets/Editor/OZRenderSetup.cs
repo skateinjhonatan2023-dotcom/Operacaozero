@@ -81,14 +81,18 @@ internal static class OZRenderSetup
     {
         var importer = AssetImporter.GetAtPath(SkyPath) as TextureImporter;
         if (!importer) throw new InvalidOperationException("Panorama da ilha ausente.");
+        var textureSettings = new TextureImporterSettings();
+        importer.ReadTextureSettings(textureSettings);
         if (importer.textureShape != TextureImporterShape.TextureCube ||
-            importer.cubemapConvolution != TextureImporterCubemapConvolution.Specular ||
+            textureSettings.cubemapConvolution != TextureImporterCubemapConvolution.Specular ||
             importer.maxTextureSize != 512)
         {
             importer.textureShape = TextureImporterShape.TextureCube;
             importer.generateCubemap = TextureImporterGenerateCubemap.AutoCubemap;
-            importer.cubemapConvolution = TextureImporterCubemapConvolution.Specular;
             importer.mipmapEnabled = true;
+            importer.ReadTextureSettings(textureSettings);
+            textureSettings.cubemapConvolution = TextureImporterCubemapConvolution.Specular;
+            importer.SetTextureSettings(textureSettings);
             importer.maxTextureSize = 512;
             importer.SaveAndReimport();
         }
