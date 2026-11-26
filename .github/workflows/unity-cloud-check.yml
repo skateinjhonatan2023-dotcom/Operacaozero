@@ -65,6 +65,16 @@ jobs:
                       line=re.sub(r'https?://\S+','[url removed]',line)
                       line=re.sub(r'(?i)(token|password|secret|api.?key)\s*[:=]\s*\S+','[redacted]',line)
                       print(line[:650])
+              print('EXACT PROJECT ERROR CONTEXT')
+              indexes=set()
+              for i,line in enumerate(lines):
+                  if re.search(r'OZBuild:Prepare|OZRenderSetup:ConfigurePipeline|at OZBuild.Prepare|preExportMethod.*failed',line):
+                      indexes.update(range(max(0,i-8),min(len(lines),i+9)))
+              for i in sorted(indexes):
+                  line=lines[i]
+                  if re.search(r'(?i)token|password|secret|api.?key|credential|authorization',line):
+                      continue
+                  print(str(i+1)+": "+re.sub(r'https?://\S+','[url removed]',line)[:800])
               print('FINAL LOG SUMMARY')
               for line in lines[-120:]:
                   if re.search(r'error|fail|exception|scene|export|OZBuild|OZRenderSetup',line,re.I) and 'ignored in' not in line:
