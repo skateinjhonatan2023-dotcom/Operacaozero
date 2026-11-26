@@ -14,3 +14,10 @@
 - Combate: escopeta experimental (modelo de rifle reaproveitado), granadas, disparo semiautomático e recuo por categoria.
 - Configurações: corrida automática, giroscópio quando suportado, FOV, suavização e dificuldade.
 - Nenhum teste executado nesta etapa por solicitação do responsável. Nenhuma build solicitada.
+
+## V0.7.1 — Correções do teste Android da Build 7
+- Feedback real: corpos enterrados, mapa visualmente vazio e HUD de botões retangulares; lobby/rotação 360° aprovados pelo jogador e preservados.
+- Terreno gerado explicitamente, altura interpolada no espaço do terreno, collider sincronizado, renderização não instanciada, maior distância de visão, nova pintura e bairros mais densos. Spawn protegido e recuperação de cápsula abaixo do solo; alinhamento visual por ossos dos pés separado do controlador. Causa exata ainda precisa ser confirmada no dispositivo.
+- HUD original inspirado na disposição enviada pelo jogador: círculos, ícones gerados no código, analógico móvel, mapa de alturas/estradas com zonas e marcadores, barras de HP/colete, inventário, mira e configurações. Sem falsa indicação de online.
+- Referências de organização espacial (não importadas): Erangel — https://pubg.com/pt-br/game-info/maps/erangel ; Bermuda — https://play.google.com/store/apps/editorial?hl=en_US&id=mc_editorialevergreen_post_install_free_fire_map_spotlight_3_now_fcp .
+- Arte continua procedural e modelos existentes; não é reprodução de PUBG/Free Fire. Nenhum novo asset externo importado. Não compilado nem testado no Android nesta etapa. APK V0.7.1 requer nova build.

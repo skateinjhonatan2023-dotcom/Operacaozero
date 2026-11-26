@@ -65,6 +65,8 @@ internal static class OZIsland
         EditorUtility.SetDirty(layer);
         EditorUtility.SetDirty(terrainData);
         terrain.heightmapPixelError = 4;
+        terrain.drawHeightmap=true;
+        terrain.GetComponent<TerrainCollider>().terrainData=terrainData;
         terrain.drawInstanced = false; // Keep the Android terrain mesh on the standard rendering path.
         terrain.basemapDistance=500;
         terrainData.SyncHeightmap();

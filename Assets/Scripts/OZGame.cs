@@ -25,7 +25,7 @@ public sealed class OZGame : MonoBehaviour {
  public float HitUntil {get;private set;}
  public float DamageUntil {get;private set;}
  public Vector3 DamageSource {get;private set;}
- OZDoor[] doors; OZDoor nearbyDoor; float nextDoorScan,nextDrop;
+ OZDoor[] doors; OZDoor nearbyDoor; float nextDoorScan,nextDrop,protectedUntil;
  OZVehicle[] vehicles; OZVehicle nearbyVehicle,driving;
  public bool Driving=>driving!=null;
  public bool Gyro {get;set;}
@@ -61,7 +61,7 @@ public sealed class OZGame : MonoBehaviour {
  public static bool GroundHeight(Vector3 p,out float y){var t=Terrain.activeTerrain;y=0;if(!t)return false;var o=t.transform.position;var s=t.terrainData.size;float u=(p.x-o.x)/s.x,v=(p.z-o.z)/s.z;if(u<0||u>1||v<0||v>1)return false;y=o.y+t.terrainData.GetInterpolatedHeight(u,v);return true;}
  public static bool RecoverGround(CharacterController c){if(!c||!c.enabled||!GroundHeight(c.transform.position,out float y)||c.transform.position.y>=y-.18f)return false;var p=c.transform.position;c.enabled=false;p.y=y+.08f;c.transform.position=p;c.enabled=true;return true;}
  OZActor Spawn(Vector3 pos){if(GroundHeight(pos,out float ground))pos.y=Mathf.Max(pos.y,ground+.12f);var a=Instantiate(soldier,pos,Quaternion.identity);a.gameObject.SetActive(true);a.Setup();var ctrl=a.GetComponent<CharacterController>()??a.gameObject.AddComponent<CharacterController>();ctrl.enabled=false;ctrl.height=1.8f;ctrl.center=Vector3.up*.9f;ctrl.radius=.33f;ctrl.skinWidth=.035f;ctrl.stepOffset=.28f;ctrl.minMoveDistance=0;ctrl.enabled=true;return a;}
- public void Begin(Mode m){if(Playing||finished||!Player)return;mode=m;Playing=true;startTime=Time.time;nextDrop=startTime+80;int count=Mathf.Min(spawns.Length-1,m==Mode.BattleRoyale?19:4);for(int i=0;i<count;i++){int index=m==Mode.BattleRoyale?1+i*(spawns.Length-1)/count:i+1;Vector3 p=spawns[index].position;if(m!=Mode.BattleRoyale&&Vector3.Distance(p,spawns[0].position)>130){p=spawns[0].position+Quaternion.Euler(0,i*90,0)*Vector3.forward*35;if(Physics.Raycast(p+Vector3.up*100,Vector3.down,out var ground,200))p=ground.point+Vector3.up*.2f;}var a=Spawn(p);a.gameObject.AddComponent<OZBot>().Init(this,a);bots.Add(a);}
+ public void Begin(Mode m){if(Playing||finished||!Player)return;mode=m;Playing=true;startTime=Time.time;protectedUntil=startTime+8;ZoneSeconds=MapRadius>200?55:25;nextDrop=startTime+80;int count=Mathf.Min(spawns.Length-1,m==Mode.BattleRoyale?19:4);for(int i=0;i<count;i++){int index=m==Mode.BattleRoyale?1+i*(spawns.Length-1)/count:i+1;Vector3 p=spawns[index].position;if(m!=Mode.BattleRoyale&&Vector3.Distance(p,spawns[0].position)>130){p=spawns[0].position+Quaternion.Euler(0,i*90,0)*Vector3.forward*35;if(Physics.Raycast(p+Vector3.up*100,Vector3.down,out var ground,200))p=ground.point+Vector3.up*.2f;}var a=Spawn(p);a.gameObject.AddComponent<OZBot>().Init(this,a);bots.Add(a);}
  SpawnLoot();
  if (mode==Mode.BattleRoyale) {
   Vector3 drop = spawns[0].position + Vector3.up * 36;
@@ -152,7 +152,7 @@ public sealed class OZGame : MonoBehaviour {
   if (vy>0 && (collision&CollisionFlags.Above)!=0) vy=0;
   if (Deploying && ((collision&CollisionFlags.Below)!=0 || (GroundHeight(Player.transform.position,out float ground)&&Player.transform.position.y<=ground+.15f))) {
    Deploying=false;
-   startTime=Time.time;nextDrop=startTime+80;
+   startTime=Time.time;protectedUntil=startTime+8;nextDrop=startTime+80;
    Destroy(canopy);
   }
   Player.Pose(movement.magnitude*speed,Aim,low,Deploying||!cc.isGrounded,reloadUntil>0);
@@ -237,7 +237,7 @@ public sealed class OZGame : MonoBehaviour {
   foreach(var bot in bots){if(!bot||bot.Dead)continue;float d=Vector3.Distance(center,bot.transform.position);if(d<7&&bot.Damage(90*(1-d/7f)))Kills++;}
   if(Player&&!Player.Dead){float d=Vector3.Distance(center,Player.transform.position);if(d<7)Player.Damage(65*(1-d/7f));}
  }
- public void BotHit(float amount,Vector3 source){if(!Playing||!Player||Player.Dead)return;DamageSource=source;DamageUntil=Time.time+1.2f;Player.Damage(amount);}
+ public void BotHit(float amount,Vector3 source){if(!Playing||!Player||Player.Dead||Time.time<protectedUntil)return;DamageSource=source;DamageUntil=Time.time+1.2f;Player.Damage(amount);}
  void ApplyZoneDamage(OZActor actor,float dt) {
   Vector3 position=actor.transform.position;
   if (position.x*position.x+position.z*position.z>Zone*Zone)

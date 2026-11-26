@@ -27,6 +27,7 @@ public sealed class OZHud:MonoBehaviour {
   for(int i=0;i<Input.touchCount;i++){
    Touch t=Input.GetTouch(i);Vector2 p=GuiPoint(t.position);bool end=t.phase==TouchPhase.Canceled||t.phase==TouchPhase.Ended;
    if(t.phase==TouchPhase.Began){
+    if(expanded){expanded=false;ClearTouches();return;}
     if(moveFinger<0&&InCircle(Stick,p)){moveFinger=t.fingerId;stickOrigin=Stick.center;}
     else if(fireFinger<0&&InCircle(Fire,p)){fireFinger=t.fingerId;game.Trigger=true;}
     else if(Activate(p)){}
@@ -54,7 +55,7 @@ public sealed class OZHud:MonoBehaviour {
   if(InCircle(C(.047f,.61f,.105f),p)){game.HealRequested=true;return true;}
   if(InCircle(C(.952f,.045f,.068f),p)){settings=true;return true;}
   if(InCircle(C(.95f,.31f,.095f),p)){game.GrenadeRequested=true;return true;}
-  if(Hit(R(.77f,.14f,.19f,.09f),p)){game.SetWeapon((game.Weapon+1)%game.WeaponCount);return true;}
+  if(Hit(R(.76f,.078f,.22f,.158f),p)){game.SetWeapon((game.Weapon+1)%game.WeaponCount);return true;}
   if(Hit(R(.77f,.235f,.14f,.07f),p)){game.SingleShot=!game.SingleShot;return true;}
   if(Hit(R(.34f,.67f,.30f,.07f),p)&&game.NearbyInteraction!=""){game.InteractRequested=true;return true;}
   if(Hit(R(.34f,.76f,.30f,.07f),p)&&game.NearbyLoot!=""){game.LootRequested=true;return true;}
@@ -94,7 +95,7 @@ public sealed class OZHud:MonoBehaviour {
   Text(R(.775f,.084f,.18f,.042f),game.WeaponName.ToUpperInvariant(),22,TextAnchor.MiddleLeft);
   Text(R(.775f,.124f,.18f,.057f),$"{game.Ammo} / {game.Reserve}",35,TextAnchor.MiddleLeft);
   Draw(Icon("rifle"),R(.895f,.145f,.07f,.067f),Color.white);
-  Text(R(.78f,.185f,.15f,.042f),game.SingleShot?"SEMIAUTO":"AUTOMÁTICO",18,TextAnchor.MiddleLeft);
+  Text(R(.78f,.185f,.15f,.042f),game.SingleShot?"SEMIAUTO":"AUTOMÁTICO",18,TextAnchor.MiddleLeft);Text(R(.76f,.32f,.14f,.04f),$"CAPACETE {Mathf.CeilToInt(player.Helmet)}",17);
   Fill(R(.77f,.24f,.14f,.065f),black);Text(R(.77f,.24f,.14f,.065f),"TROCAR MODO",17);
   Control(C(.95f,.31f,.095f),"grenade");Text(R(.92f,.35f,.06f,.04f),game.Grenades.ToString(),19);
   float heading=Mathf.Repeat(game.Heading,360);string[] dirs={"N","NE","L","SE","S","SO","O","NO"};
@@ -113,7 +114,7 @@ public sealed class OZHud:MonoBehaviour {
   Fill(R(.29f,.915f,.38f,.073f),black);
   Text(R(.295f,.919f,.065f,.031f),$"HP {Mathf.CeilToInt(player.hp)}",17);
   Fill(R(.36f,.925f,.29f,.017f),new Color(.25f,.29f,.29f));Fill(R(.36f,.925f,.29f*Mathf.Clamp01(player.hp/100),.017f),Color.white);
-  Text(R(.295f,.951f,.065f,.031f),$"CAP {Mathf.CeilToInt(player.Helmet)}",15);
+  Text(R(.295f,.951f,.065f,.031f),$"COLETE {Mathf.CeilToInt(player.armor)}",14);
   Fill(R(.36f,.957f,.29f,.017f),new Color(.25f,.29f,.29f));Fill(R(.36f,.957f,.29f*Mathf.Clamp01(player.armor/50),.017f),gold);
   var cross=C(.5f,.5f,.04f);float w=cross.width;
   Fill(new Rect(cross.center.x-w*.5f,cross.center.y-1,w,2),Color.white);Fill(new Rect(cross.center.x-1,cross.center.y-w*.5f,2,w),Color.white);

@@ -51,7 +51,7 @@ public sealed class OZLobby : MonoBehaviour
 
     void CreateCanvas()
     {
-        var screen = new GameObject("Lobby V0.7", typeof(RectTransform), typeof(Canvas),
+        var screen = new GameObject("Lobby V0.7.1", typeof(RectTransform), typeof(Canvas),
             typeof(CanvasScaler), typeof(GraphicRaycaster));
         screen.transform.SetParent(transform, false);
         canvas = screen.GetComponent<Canvas>();
@@ -76,7 +76,7 @@ public sealed class OZLobby : MonoBehaviour
         Picture(Place(safe, "Operação Zero", 23, 42, 308, 95), brand, Color.white);
         var tag = Place(safe, "Versão de teste", 115, 146, 155, 34);
         Picture(tag, goldSprite, Color.white, slice: true);
-        ui.Label(tag, "V0.7 DEV", 8, 0, 139, 34, 25, Ink, TextAnchor.MiddleCenter, slanted: true);
+        ui.Label(tag, "V0.7.1", 8, 0, 139, 34, 25, Ink, TextAnchor.MiddleCenter, slanted: true);
 
         var nav = Layer(safe, "Navegação principal");
         nav.anchorMin = new Vector2(0, 1);
@@ -99,7 +99,7 @@ public sealed class OZLobby : MonoBehaviour
 
         var notes = ui.Panel(safe, "Atualização", 23, -132, 320, 103, LeftBottom);
         Picture(Place(notes, "Ilha Zero", 8, 8, 105, 86), news, Color.white);
-        ui.Label(notes, "ATUALIZAÇÃO V0.7", 123, 6, 188, 27, 23, Gold, slanted: true);
+        ui.Label(notes, "ATUALIZAÇÃO V0.7.1", 123, 6, 188, 27, 23, Gold, slanted: true);
         ui.Label(notes, "Ilha Zero • 2 km\nControles e combate", 123, 34, 180, 53, 19, Muted);
         ui.Button(notes, "", 2, 2, 316, 99, OpenNotes, bare: true);
 
@@ -539,7 +539,7 @@ public sealed class OZLobby : MonoBehaviour
 
     void OpenNotes()
     {
-        var panel = OpenDialog("ATUALIZAÇÃO V0.7", "Ilha Zero • Unity");
+        var panel = OpenDialog("ATUALIZAÇÃO V0.7.1", "Ilha Zero • Unity");
         ui.Label(panel, "Ilha Zero • 2 km, até 19 bots.\nVeículos e granadas experimentais.\nVersão em desenvolvimento; testes pendentes.",
             25, 128, 470, 170, 24, White, TextAnchor.UpperLeft);
         ui.Button(panel, "CRÉDITOS E LICENÇAS", 25, 369, 470, 53, OpenCredits);
