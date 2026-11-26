@@ -373,7 +373,7 @@ public sealed class OZLobby : MonoBehaviour
         {
             int slot = index;
             string info = $"{game.GetWeaponName(slot)}  ·  {game.GetWeaponCapacity(slot)} cartuchos  ·  {game.GetWeaponDamage(slot)} dano";
-            ui.Button(panel, info, 25, 123 + index * 68, 470, 55, () =>
+            ui.Button(panel, info, 25, 119 + index * 53, 470, 47, () =>
             {
                 game.SetWeapon(slot);
                 OpenArsenal();
@@ -451,6 +451,7 @@ public sealed class OZLobby : MonoBehaviour
     void OpenSettings()
     {
         var panel = OpenDialog("AJUSTES", "Perfis gráficos, limite de quadros e sensibilidade.");
+        ui.Button(panel, "CONTROLES", 310, 72, 185, 42, OpenControls, size:18);
         var qualityNames = new[] { "LEVE", "MÉDIA", "ALTA", "ULTRA" };
         var quality = new Button[qualityNames.Length];
         int selected = PlayerPrefs.GetInt("OZ_QUALITY", 0);
@@ -523,6 +524,17 @@ public sealed class OZLobby : MonoBehaviour
             PlayerPrefs.Save();
             notice.text = "Configuração guardada.";
         });
+    }
+
+    void OpenControls()
+    {
+        var panel=OpenDialog("CONTROLES", "Câmera, corrida e dificuldade offline.");
+        ui.Button(panel, game.AutoSprint?"CORRIDA AUTO: SIM":"CORRIDA AUTO: NÃO",25,120,470,48,()=>{game.AutoSprint=!game.AutoSprint;PlayerPrefs.SetInt("OZ_AUTO_SPRINT",game.AutoSprint?1:0);PlayerPrefs.Save();OpenControls();});
+        var gyro=ui.Button(panel,game.Gyro?"GIROSCÓPIO: SIM":"GIROSCÓPIO: NÃO",25,177,470,48,()=>{game.Gyro=!game.Gyro;Input.gyro.enabled=game.Gyro;PlayerPrefs.SetInt("OZ_GYRO",game.Gyro?1:0);PlayerPrefs.Save();OpenControls();});gyro.interactable=SystemInfo.supportsGyroscope;
+        ui.Button(panel,$"CAMPO DE VISÃO: {game.CameraFov:0}°",25,234,470,48,()=>{game.CameraFov=game.CameraFov>=85?55:game.CameraFov+5;PlayerPrefs.SetFloat("OZ_FOV",game.CameraFov);PlayerPrefs.Save();OpenControls();});
+        ui.Button(panel,$"BOTS: {new[]{"FÁCIL","NORMAL","DIFÍCIL"}[game.BotDifficulty]}",25,291,470,48,()=>{game.BotDifficulty=(game.BotDifficulty+1)%3;PlayerPrefs.SetInt("OZ_BOT_DIFFICULTY",game.BotDifficulty);PlayerPrefs.Save();OpenControls();});
+        ui.Button(panel,$"SUAVIZAÇÃO: {game.CameraSmooth:0}",25,348,470,48,()=>{game.CameraSmooth=game.CameraSmooth>=30?6:game.CameraSmooth+6;PlayerPrefs.SetFloat("OZ_CAM_SMOOTH",game.CameraSmooth);PlayerPrefs.Save();OpenControls();});
+        ui.Button(panel,"VOLTAR",25,405,470,48,OpenSettings);
     }
 
     void OpenNotes()

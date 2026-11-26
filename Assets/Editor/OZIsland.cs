@@ -69,6 +69,7 @@ internal static class OZIsland
 
         BuildDistricts(root.transform, terrain, concrete, asphalt);
         PlaceRocks(root.transform, terrain);
+        BuildVehicles(root.transform,terrain);
         var water = Block(root.transform, "Mar", new Vector3(0, 0, 0), new Vector3(2050, .15f, 2050),
             Solid("Ocean", new Color(.055f,.24f,.33f), .7f));
         UnityEngine.Object.DestroyImmediate(water.GetComponent<Collider>());
@@ -144,6 +145,24 @@ internal static class OZIsland
                     Block(region,i==0?"Contentor":"Cobertura",p,new Vector3(i==0?5:3,1.4f,1.6f),metal);
                 }
             }
+        }
+    }
+
+    static void BuildVehicles(Transform parent,Terrain terrain)
+    {
+        var body=Solid("VehicleMetal",new Color(.25f,.30f,.22f),.4f);
+        var tire=Solid("VehicleRubber",new Color(.045f,.05f,.05f));
+        for(int i=0;i<6;i++)
+        {
+            var site=Districts[i<3?1:i==3?2:i==4?3:5];
+            var pos=new Vector3(site.x+30+i*5,0,site.y+30);pos.y=Height(terrain,pos)+.15f;
+            var car=new GameObject(i%3==0?"Jipe":i%3==1?"Buggy":"Motocicleta");car.transform.SetParent(parent,false);car.transform.position=pos;
+            float width=i%3==2?.7f:1.7f,length=i%3==2?2.1f:3.6f;
+            var chassis=GameObject.CreatePrimitive(PrimitiveType.Cube);chassis.transform.SetParent(car.transform,false);chassis.transform.localPosition=Vector3.up*.75f;chassis.transform.localScale=new Vector3(width,.55f,length);chassis.GetComponent<Renderer>().sharedMaterial=body;UnityEngine.Object.DestroyImmediate(chassis.GetComponent<Collider>());
+            int wheels=i%3==2?2:4;
+            for(int k=0;k<wheels;k++){var wheel=GameObject.CreatePrimitive(PrimitiveType.Cylinder);wheel.transform.SetParent(car.transform,false);wheel.transform.localPosition=new Vector3(wheels==2?0:(k%2==0?-1:1)*width*.5f,.38f,(k<wheels/2?-1:1)*length*.37f);wheel.transform.localRotation=Quaternion.Euler(0,0,90);wheel.transform.localScale=new Vector3(.7f,.14f,.7f);wheel.GetComponent<Renderer>().sharedMaterial=tire;UnityEngine.Object.DestroyImmediate(wheel.GetComponent<Collider>());}
+            var ctrl=car.AddComponent<CharacterController>();ctrl.radius=width*.48f;ctrl.height=1.5f;ctrl.center=Vector3.up*.75f;ctrl.stepOffset=.25f;
+            var vehicle=car.AddComponent<OZVehicle>();vehicle.Title=car.name;vehicle.MaxSpeed=i%3==0?15:i%3==1?19:21;
         }
     }
 
