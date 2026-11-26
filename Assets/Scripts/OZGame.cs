@@ -66,7 +66,7 @@ public sealed class OZGame : MonoBehaviour {
  public void Begin(Mode m){if(Playing||finished||!Player)return;mode=m;Playing=true;startTime=Time.time;protectedUntil=startTime+8;ZoneSeconds=MapRadius>200?55:25;nextDrop=startTime+80;int count=Mathf.Min(spawns.Length-1,m==Mode.BattleRoyale?19:4);for(int i=0;i<count;i++){int index=m==Mode.BattleRoyale?1+i*(spawns.Length-1)/count:i+1;Vector3 p=spawns[index].position;if(m!=Mode.BattleRoyale&&Vector3.Distance(p,spawns[0].position)>130){p=spawns[0].position+Quaternion.Euler(0,i*90,0)*Vector3.forward*35;if(Physics.Raycast(p+Vector3.up*100,Vector3.down,out var ground,200))p=ground.point+Vector3.up*.2f;}var a=Spawn(p);a.gameObject.AddComponent<OZBot>().Init(this,a);bots.Add(a);}
  SpawnLoot();
  if (mode==Mode.BattleRoyale) {
-  Vector3 drop = spawns[0].position + Vector3.up * 36;
+  Vector3 drop = spawns[0].position + Vector3.up * 24;
   cc.enabled=false;
   Player.transform.position=drop;
   cc.enabled=true;
@@ -266,6 +266,7 @@ public sealed class OZGame : MonoBehaviour {
   Vector3 offset=Driving?q*new Vector3(0,1.7f,-6.5f):FPS?Vector3.zero:q*new Vector3(LeftShoulder?-.65f:.65f,.18f,Aim?-2.3f:-4.3f);
   Vector3 target=SafeCameraPosition(pivot,pivot+offset);
   Vector3 position=instant||FPS?target:SafeCameraPosition(pivot,Vector3.Lerp(view.transform.position,target,1f-Mathf.Exp(-CameraSmooth*Time.deltaTime)));
+  if(GroundHeight(position,out float cameraGround))position.y=Mathf.Max(position.y,cameraGround+.22f);
   view.transform.SetPositionAndRotation(position,q);
   view.fieldOfView=Mathf.Lerp(view.fieldOfView,Aim?Mathf.Min(45,CameraFov):CameraFov,1f-Mathf.Exp(-10f*Time.deltaTime));
  }
@@ -322,6 +323,11 @@ public sealed class OZGame : MonoBehaviour {
    if (!Physics.Raycast(point + Vector3.up * 3, Vector3.down, out var floor, 8, ~0, QueryTriggerInteraction.Ignore))
     continue;
    loot.Add(OZLoot.Create((OZLoot.Kind)(i % 4), floor.point,effectsMaterial));
+  }
+  // Populate interiors, not just the spawn rings. Limit to 48 extra pickups on mobile.
+  int extra=0;
+  foreach(var door in doors){if(!door||extra>=48)continue;var point=door.transform.position+door.transform.forward*2.3f+door.transform.right;
+   if(Physics.Raycast(point+Vector3.up*1.5f,Vector3.down,out var floor,4,~0,QueryTriggerInteraction.Ignore)){loot.Add(OZLoot.Create((OZLoot.Kind)(extra%4),floor.point,effectsMaterial));extra++;}
   }
  }
  void UpdateLoot() {

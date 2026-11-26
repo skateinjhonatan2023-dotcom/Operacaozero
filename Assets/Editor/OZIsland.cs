@@ -10,7 +10,7 @@ internal static class OZIsland
     {
         var asphalt = Surface("Asphalt", "asphalt.jpg", Color.white);
         var concrete = Surface("Concrete", "concrete.jpg", Color.white);
-        var terrainData = AssetDatabase.LoadAssetAtPath<TerrainData>(Generated + "IlhaZeroTerrainV071.asset");
+        var terrainData = AssetDatabase.LoadAssetAtPath<TerrainData>(Generated + "IlhaZeroTerrainV072.asset");
         if (!terrainData)
         {
             terrainData = new TerrainData { heightmapResolution = 513, size = new Vector3(2000, 100, 2000) };
@@ -35,7 +35,7 @@ internal static class OZIsland
                 heights[z,x] = Mathf.Lerp(y, 1f, coast)/100f;
             }
             terrainData.SetHeights(0, 0, heights);
-            AssetDatabase.CreateAsset(terrainData, Generated + "IlhaZeroTerrainV071.asset");
+            AssetDatabase.CreateAsset(terrainData, Generated + "IlhaZeroTerrainV072.asset");
         }
 
         var root = new GameObject("Ilha Zero — 2 km");
@@ -75,6 +75,10 @@ internal static class OZIsland
         PaintGround(terrain,layer);
         BuildDistricts(root.transform, terrain, concrete, asphalt);
         BuildTown(root.transform,terrain,concrete,asphalt);
+        BuildLandmarks(root.transform,terrain,concrete,asphalt);
+        // Use ordinary URP mesh renderers for the surface; retain the matching TerrainCollider.
+        BuildGroundMeshes(root.transform,terrain);
+        terrain.drawHeightmap=false;
         PlaceRocks(root.transform, terrain);
         BuildVehicles(root.transform,terrain);
         var water = Block(root.transform, "Mar", new Vector3(0, 0, 0), new Vector3(2050, .15f, 2050),
@@ -148,7 +152,7 @@ internal static class OZIsland
                 for(int k=0;k<10;k++)
                 {
                     var p=center+new Vector3(random.Next(-35,36),0,random.Next(-35,36));
-                    if(Mathf.Abs(p.x)<0.01f || (Mathf.Abs(Mathf.Abs(p.x-center.x)-18)<6 && Mathf.Abs(Mathf.Abs(p.z-center.z)-18)<6))continue;
+                    if(Mathf.Abs(p.x-center.x)<4 || Mathf.Abs(p.z-center.z)<4 || (Mathf.Abs(Mathf.Abs(p.x-center.x)-13)<5 && Mathf.Abs(Mathf.Abs(p.z-center.z)-13)<5))continue;
                     p.y=Height(terrain,p)+.7f;
                     Block(region,i==0?"Contentor":"Cobertura",p,new Vector3(i==0?5:3,1.4f,1.6f),metal);
                 }
@@ -231,6 +235,98 @@ internal static class OZIsland
         var door=Block(hinge,"Madeira",hinge.position+new Vector3(1,1.15f,0),new Vector3(2,2.3f,.12f),wood);
         GameObjectUtility.SetStaticEditorFlags(door.gameObject,0);hinge.gameObject.AddComponent<OZDoor>();
     }
+    static void BuildGroundMeshes(Transform parent,Terrain terrain)
+    {
+        var grass=Surface("GroundMeshGrass", "grass.jpg", Color.white);
+        var dirt=Surface("GroundMeshDirt","concrete.jpg",new Color(.70f,.61f,.48f));
+        var data=terrain.terrainData;int resolution=data.heightmapResolution;
+        var heights=data.GetHeights(0,0,resolution,resolution);
+        var root=new GameObject("Solo visível — malhas URP").transform;root.SetParent(parent,false);
+        const int cells=64;float step=data.size.x/(resolution-1);
+        for(int z0=0;z0<resolution-1;z0+=cells)for(int x0=0;x0<resolution-1;x0+=cells)
+        {
+            int nx=Mathf.Min(cells,resolution-1-x0),nz=Mathf.Min(cells,resolution-1-z0),stride=nx+1;
+            var v=new Vector3[(nx+1)*(nz+1)];var uv=new Vector2[v.Length];var norms=new Vector3[v.Length];
+            var grassTriangles=new System.Collections.Generic.List<int>();var dirtTriangles=new System.Collections.Generic.List<int>();
+            for(int z=0;z<=nz;z++)for(int x=0;x<=nx;x++){
+                int gx=x0+x,gz=z0+z,index=z*stride+x;
+                float wx=gx*step,wz=gz*step;
+                v[index]=new Vector3(x*step,heights[gz,gx]*data.size.y,z*step);
+                uv[index]=new Vector2(wx/6,wz/6);
+                norms[index]=data.GetInterpolatedNormal(gx/(resolution-1f),gz/(resolution-1f));
+                if(x==nx||z==nz)continue;
+                bool sand=heights[gz,gx]*data.size.y+terrain.transform.position.y<3;
+                var tris=sand?dirtTriangles:grassTriangles;
+                tris.Add(index);tris.Add(index+stride);tris.Add(index+1);
+                tris.Add(index+1);tris.Add(index+stride);tris.Add(index+stride+1);
+            }
+            var mesh=new Mesh {name=$"Solo_{x0}_{z0}",vertices=v,uv=uv,normals=norms,subMeshCount=2};
+            mesh.SetTriangles(grassTriangles,0);mesh.SetTriangles(dirtTriangles,1);mesh.RecalculateBounds();mesh.RecalculateTangents();
+            string path=Generated+$"Ground072_{x0}_{z0}.asset";
+            var existing=AssetDatabase.LoadAssetAtPath<Mesh>(path);
+            if(existing){EditorUtility.CopySerialized(mesh,existing);UnityEngine.Object.DestroyImmediate(mesh);mesh=existing;EditorUtility.SetDirty(mesh);}
+            else AssetDatabase.CreateAsset(mesh,path);
+            var chunk=new GameObject($"Setor {x0}-{z0}");chunk.transform.SetParent(root,false);
+            chunk.transform.position=terrain.transform.position+new Vector3(x0*step,0,z0*step);
+            chunk.AddComponent<MeshFilter>().sharedMesh=mesh;
+            var renderer=chunk.AddComponent<MeshRenderer>();renderer.sharedMaterials=new[]{grass,dirt};
+            renderer.shadowCastingMode=UnityEngine.Rendering.ShadowCastingMode.Off;
+            // Collider stays on the original heightfield, not duplicated on every mesh tile.
+        }
+    }
+    static void BuildLandmarks(Transform parent,Terrain t,Material concrete,Material asphalt)
+    {
+        var brick=Surface("LandmarkBrick","concrete.jpg",new Color(.72f,.51f,.38f));
+        var plaster=Surface("LandmarkPlaster","concrete.jpg",new Color(.84f,.82f,.72f));
+        var roof=Solid("LandmarkRoof",new Color(.32f,.15f,.09f));
+        var steel=Solid("LandmarkSteel",new Color(.24f,.31f,.32f));
+        var crate=Solid("LandmarkCrate",new Color(.44f,.33f,.19f));
+        var paint=Solid("LandmarkPaint",new Color(.92f,.81f,.52f));
+        // The first landing is inside a compact settlement, with sightline breaks every 15–35 metres.
+        var town=new GameObject("Nova Esperança — praça e comércio").transform;town.SetParent(parent,false);
+        for(int side=-1;side<=1;side+=2){
+            Road(town,t,new Vector2(-75,side*17),new Vector2(75,side*17),asphalt);
+            Road(town,t,new Vector2(side*17,-75),new Vector2(side*17,75),asphalt);
+            for(int k=-2;k<=2;k++){
+                var q=new Vector3(k*24,0,side*82);q.y=Height(t,q);
+                House(town,q,concrete,k%2==0?brick:plaster,roof,crate);
+            }
+            for(int k=0;k<6;k++){var q=new Vector3(side*6,0,-45+k*18);q.y=Height(t,q);Block(town,"Banco e cobertura",q+Vector3.up*.5f,new Vector3(2.7f,1,.65f),concrete);}
+        }
+        var square=new Vector3(0,0,0);square.y=Height(t,square);
+        Block(town,"Praça",square+Vector3.up*.04f,new Vector3(10,.08f,10),concrete);
+        Block(town,"Monumento",square+Vector3.up*1.5f,new Vector3(1.2f,3,1.2f),concrete);
+        // Separate silhouettes for a military outpost, port, and industrial yard.
+        foreach(int index in new[]{0,2,6,8})
+        {
+            var d=Districts[index];var zone=new GameObject(DistrictNames[index]+" — ponto tático").transform;zone.SetParent(parent,false);
+            for(int k=0;k<5;k++){
+                var q=new Vector3(d.x-38+k*19,0,d.y+88);q.y=Height(t,q);
+                var mat=k%2==0?steel:brick;
+                Block(zone,"Contêiner",q+Vector3.up*1.35f,new Vector3(10,2.7f,2.7f),mat);
+                for(int j=0;j<5;j++)Block(zone,"Friso",q+new Vector3(-4+j*2,1.35f,1.39f),new Vector3(.13f,2.5f,.08f),mat);
+                Block(zone,"Caixas",q+new Vector3(3,.55f,-4),new Vector3(2.5f,1.1f,1.8f),crate);
+            }
+            var tower=new Vector3(d.x+90,0,d.y-65);tower.y=Height(t,tower);
+            Watchtower(zone,tower,steel,concrete);
+            for(int k=0;k<4;k++){var q=new Vector3(d.x-80,0,d.y-48+k*18);q.y=Height(t,q);Block(zone,"Muro defensivo",q+Vector3.up*.9f,new Vector3(.45f,1.8f,12),concrete);}
+            var sign=new Vector3(d.x,0,d.y-75);sign.y=Height(t,sign);
+            Block(zone,"Poste de sinalização",sign+Vector3.up*1.6f,new Vector3(.17f,3.2f,.17f),steel);
+            Block(zone,"Placa",sign+Vector3.up*2.75f,new Vector3(3.8f,.8f,.12f),paint);
+        }
+    }
+    static void Watchtower(Transform parent,Vector3 p,Material steel,Material concrete)
+    {
+        var tower=new GameObject("Torre de observação acessível").transform;tower.SetParent(parent,false);tower.position=p;
+        foreach(int x in new[]{-1,1})foreach(int z in new[]{-1,1})
+            Block(tower,"Pilar",p+new Vector3(x*1.8f,2.4f,z*1.8f),new Vector3(.25f,4.8f,.25f),steel);
+        Block(tower,"Plataforma",p+Vector3.up*4.8f,new Vector3(4.2f,.25f,4.2f),concrete);
+        Block(tower,"Cobertura",p+Vector3.up*7.3f,new Vector3(4.5f,.18f,4.5f),steel);
+        foreach(int side in new[]{-1,1})Block(tower,"Parapeito",p+new Vector3(side*2,5.45f,0),new Vector3(.18f,1.1f,4.2f),steel);
+        Block(tower,"Parapeito",p+new Vector3(0,5.45f,2),new Vector3(4.2f,1.1f,.18f),steel);
+        // Ramp access with steps small enough for the character controller.
+        for(int k=0;k<24;k++)Block(tower,"Degrau",p+new Vector3(0,(k+1)*.2f-.1f,-14+k*.52f),new Vector3(1.6f,.2f+(k+1)*.2f,.55f),concrete);
+    }
     static void BuildVehicles(Transform parent,Terrain terrain)
     {
         var body=Solid("VehicleMetal",new Color(.25f,.30f,.22f),.4f);
@@ -275,6 +371,7 @@ internal static class OZIsland
         root.gameObject.AddComponent<MeshFilter>().sharedMesh=mesh;
         root.gameObject.AddComponent<MeshRenderer>().sharedMaterial=material;
         // Terrain provides collision underneath.
+        root.GetComponent<MeshRenderer>().shadowCastingMode=UnityEngine.Rendering.ShadowCastingMode.Off;
     }
 
     static void Tree(Transform parent,Terrain terrain,Vector3 p,Material bark,Material leaf,float h)
@@ -287,7 +384,7 @@ internal static class OZIsland
         var crown=GameObject.CreatePrimitive(PrimitiveType.Sphere);crown.transform.SetParent(tree,false);
         crown.transform.localPosition=Vector3.up*h*.86f;crown.transform.localScale=new Vector3(h*.65f,h*.65f,h*.65f);
         crown.GetComponent<Renderer>().sharedMaterial=leaf;UnityEngine.Object.DestroyImmediate(crown.GetComponent<Collider>());
-        var lod=tree.gameObject.AddComponent<LODGroup>();lod.SetLODs(new[]{new LOD(.015f,new[]{trunk.GetComponent<Renderer>(),crown.GetComponent<Renderer>()})});lod.RecalculateBounds();
+        var lod=tree.gameObject.AddComponent<LODGroup>();lod.SetLODs(new[]{new LOD(.009f,new[]{trunk.GetComponent<Renderer>(),crown.GetComponent<Renderer>()})});lod.RecalculateBounds();
     }
 
     static float Height(Terrain terrain, Vector3 position) =>

@@ -25,6 +25,9 @@ public static class OZBuild
         var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
         // Always generate the current island; an older prefab must not silently override it.
         var island = OZIsland.Create();
+        var ground = island.transform.Find("Solo visível — malhas URP");
+        if (!ground || ground.GetComponentsInChildren<MeshRenderer>().Length < 64)
+            throw new InvalidOperationException("Malhas visíveis do terreno ausentes.");
         var points = island.GetComponentsInChildren<Transform>(true)
             .Where(t => t.name.StartsWith("Spawn_", StringComparison.Ordinal))
             .OrderBy(t => t.name, StringComparer.Ordinal).ToArray();
