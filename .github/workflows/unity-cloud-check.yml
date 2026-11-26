@@ -32,7 +32,15 @@ jobs:
                   return response.read(20000000).decode("utf-8",errors="replace")
           d=json.loads(get(base))
           print("Status:",d.get("buildStatus"),"revision:",d.get("lastBuiltRevision"))
-          print("Hook:",((d.get("customConfig") or {}).get("unity") or {}).get("preExportMethod") == "OZBuild.CloudPrepare")
+          target=json.loads(get(base.rsplit("/builds/",1)[0]))
+          for label, item in (("target",target),("build",d)):
+              for keypath in ("settings.advanced.unity","customConfig.advanced.unity","customConfig.unity","settings.unity"):
+                  node=item
+                  for part in keypath.split("."):
+                      node=node.get(part,{}) if isinstance(node,dict) else {}
+                  if node:
+                      print(label,keypath,"hook:",node.get("preExportMethod"),"scenes:",(node.get("playerExporter") or {}).get("sceneList"))
+          print("Hook check completed")
           for item in d.get("failureDetails") or []:
               print("Failure category:",str(item.get("displayName",""))[:150])
           link=(d.get("links") or {}).get("log") or {}
@@ -53,9 +61,13 @@ jobs:
               print("Log lines:",len(lines))
               # Only allow known compiler diagnostics and scene/build errors, never dump private logs.
               for line in lines:
-                  if re.search(r'error CS\d{4}|(?:NullReference|InvalidOperation|MissingReference|Argument|IOException)Exception:|No scenes|pre.export method.*(?:not found|failed)|BuildFailedException:',line,re.I):
+                  if 'ignored in' not in line and 'Reference to method' not in line and re.search(r'error CS\d{4}|(?:NullReference|InvalidOperation|MissingReference|Argument|IOException)Exception:|No scenes|pre.export|BuildFailedException:|\[error\]|FATAL:|Build completed with|build failed|OZBuild|OZRenderSetup',line,re.I):
                       line=re.sub(r'https?://\S+','[url removed]',line)
                       line=re.sub(r'(?i)(token|password|secret|api.?key)\s*[:=]\s*\S+','[redacted]',line)
-                      print(line[:600])
+                      print(line[:650])
+              print('FINAL LOG SUMMARY')
+              for line in lines[-120:]:
+                  if re.search(r'error|fail|exception|scene|export|OZBuild|OZRenderSetup',line,re.I) and 'ignored in' not in line:
+                      print(re.sub(r'https?://\S+','[url removed]',line)[:650])
           except urllib.error.HTTPError as e:
               print("Log retrieval HTTP",e.code)
