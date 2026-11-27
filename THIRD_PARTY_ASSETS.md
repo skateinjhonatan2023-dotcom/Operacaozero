@@ -17,3 +17,13 @@ Não extrair recursos proprietários de jogos de referência.
 - Poly Haven, Hangar Interior (CC0): https://polyhaven.com/a/hangar_interior — HDRI candidato, não importado.
 - Quaternius, Survival Pack (CC0): https://quaternius.com/packs/survival.html — seleção e importação pendentes.
 A segunda etapa reutiliza os recursos já versionados e gera geometria original via código. Nenhum novo binário de terceiro foi adicionado.
+## Integração de Nova Esperança e HUD
+
+As atribuições desta revisão também acompanham o aplicativo em [Creditos-Ilha-Zero.txt](Assets/StreamingAssets/Creditos-Ilha-Zero.txt).
+
+| Recurso | Autor e licença | Uso |
+| --- | --- | --- |
+| [Modular Urban Apartments Facade](https://polyhaven.com/a/modular_urban_apartments_facade) | James Ray Cock, CC0 | Mercado explorável, duas malhas visuais, malha de colisão e texturas locais de 512 px. |
+| [Island Tree 01](https://polyhaven.com/a/island_tree_01) | Rob Tuytel e Rico Cilliers, CC0 | Dois níveis de detalhe, tronco físico e folhagem com recorte alfa. |
+| [Wooden Crate 02](https://polyhaven.com/a/wooden_crate_02) | James Ray Cock e Jurita Burger, CC0 | Cobertura e decoração, conversão para FBX e material compartilhado. |
+| [Game-icons.net](https://github.com/game-icons/icons/tree/82d948812bfe3f269ef8f731dcdb07b08160edc4) | Lorc e Delapouite, CC BY 3.0 | Sete pictogramas rasterizados. A lista individual está nos créditos distribuídos. |

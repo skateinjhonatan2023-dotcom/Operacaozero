@@ -15,6 +15,7 @@ public sealed class OZGame : MonoBehaviour {
  SkinnedMeshRenderer[] playerBody;
  UnityEngine.Rendering.ShadowCastingMode[] bodyShadowModes;
  bool bodyHidden; public bool Aim, Sprint, Crouch; public Vector2 Move,Look; public bool Trigger,Jump,Reload,Slide; public bool FPS;
+ public bool PointerOverHud;
  public float MapRadius {get;private set;}=160;
  public float Heading=>yaw;
  public int Survivors {get {int n=Player&&!Player.Dead?1:0;foreach(var bot in bots)if(bot&&!bot.Dead)n++;return n;}}
@@ -62,8 +63,23 @@ public sealed class OZGame : MonoBehaviour {
  void Start(){if(!view)view=Camera.main;SetFrameRate(PlayerPrefs.GetInt("OZ_FPS",30));SetQuality(PlayerPrefs.GetInt("OZ_QUALITY",0));Sensitivity=PlayerPrefs.GetFloat("OZ_SENS",1);AdsSensitivity=Mathf.Clamp(PlayerPrefs.GetFloat("OZ_ADS_SENS",.65f),.2f,3f);audioSource=gameObject.AddComponent<AudioSource>();shotEffects=gameObject.AddComponent<OZShotEffects>();shotEffects.Initialize(effectsMaterial);if(!soldier||!rifle||!shotSound||!view||spawns==null||spawns.Length<8){Result="Conteúdo gráfico obrigatório ausente";enabled=false;return;} var terrain=Terrain.activeTerrain;if(terrain)MapRadius=Mathf.Min(terrain.terrainData.size.x,terrain.terrainData.size.z)*.5f;Zone=MapRadius*.9f;doors=FindObjectsByType<OZDoor>(FindObjectsSortMode.None);vehicles=FindObjectsByType<OZVehicle>(FindObjectsSortMode.None);CameraFov=Mathf.Clamp(PlayerPrefs.GetFloat("OZ_FOV",65),55,85);CameraSmooth=Mathf.Clamp(PlayerPrefs.GetFloat("OZ_CAM_SMOOTH",18),6,30);Gyro=SystemInfo.supportsGyroscope&&PlayerPrefs.GetInt("OZ_GYRO",0)==1;if(Gyro)Input.gyro.enabled=true;BotDifficulty=Mathf.Clamp(PlayerPrefs.GetInt("OZ_BOT_DIFFICULTY",1),0,2);AutoSprint=PlayerPrefs.GetInt("OZ_AUTO_SPRINT",0)==1;Player=Spawn(spawns[0].position);cc=Player.GetComponent<CharacterController>();playerBody=Player.GetComponentsInChildren<SkinnedMeshRenderer>(true);bodyShadowModes=new UnityEngine.Rendering.ShadowCastingMode[playerBody.Length];for(int i=0;i<playerBody.Length;i++)bodyShadowModes[i]=playerBody[i].shadowCastingMode;Player.Pose(0,false);UpdateCamera(true);}
  public static bool GroundHeight(Vector3 p,out float y){var t=Terrain.activeTerrain;y=0;if(!t)return false;var o=t.transform.position;var s=t.terrainData.size;float u=(p.x-o.x)/s.x,v=(p.z-o.z)/s.z;if(u<0||u>1||v<0||v>1)return false;y=o.y+t.terrainData.GetInterpolatedHeight(u,v);return true;}
  public static bool RecoverGround(CharacterController c){if(!c||!c.enabled||!GroundHeight(c.transform.position,out float y)||c.transform.position.y>=y-.18f)return false;var p=c.transform.position;c.enabled=false;p.y=y+.08f;c.transform.position=p;c.enabled=true;return true;}
- OZActor Spawn(Vector3 pos){if(GroundHeight(pos,out float ground))pos.y=Mathf.Max(pos.y,ground+.12f);var a=Instantiate(soldier,pos,Quaternion.identity);a.gameObject.SetActive(true);a.Setup();var ctrl=a.GetComponent<CharacterController>()??a.gameObject.AddComponent<CharacterController>();ctrl.enabled=false;ctrl.height=1.8f;ctrl.center=Vector3.up*.9f;ctrl.radius=.33f;ctrl.skinWidth=.035f;ctrl.stepOffset=.28f;ctrl.minMoveDistance=0;ctrl.enabled=true;return a;}
- public void Begin(Mode m){if(Playing||finished||!Player)return;mode=m;Playing=true;startTime=Time.time;protectedUntil=startTime+8;ZoneSeconds=MapRadius>200?55:25;nextDrop=startTime+80;int count=Mathf.Min(spawns.Length-1,m==Mode.BattleRoyale?19:4);for(int i=0;i<count;i++){int index=m==Mode.BattleRoyale?1+i*(spawns.Length-1)/count:i+1;Vector3 p=spawns[index].position;if(m!=Mode.BattleRoyale&&Vector3.Distance(p,spawns[0].position)>130){p=spawns[0].position+Quaternion.Euler(0,i*90,0)*Vector3.forward*35;if(Physics.Raycast(p+Vector3.up*100,Vector3.down,out var ground,200))p=ground.point+Vector3.up*.2f;}var a=Spawn(p);a.gameObject.AddComponent<OZBot>().Init(this,a);bots.Add(a);}
+ static Vector3 GroundSpawn(Vector3 requested)
+ {
+  if(!GroundHeight(requested,out float ground))return requested;
+  for(int i=0;i<25;i++)
+  {
+   float angle=(i-1)*Mathf.PI*.25f;
+   float radius=i==0 ? 0 : 2.5f*(1+(i-1)/8);
+   var site=requested+new Vector3(Mathf.Cos(angle)*radius,0,Mathf.Sin(angle)*radius);
+   if(!GroundHeight(site,out float y))continue;
+   site.y=y+.12f;
+   if(!Physics.CheckCapsule(site+Vector3.up*.38f,site+Vector3.up*1.45f,.33f,~0,QueryTriggerInteraction.Ignore))return site;
+  }
+  requested.y=ground+.12f;
+  return requested;
+ }
+ OZActor Spawn(Vector3 pos){pos=GroundSpawn(pos);var a=Instantiate(soldier,pos,Quaternion.identity);a.gameObject.SetActive(true);a.Setup();var ctrl=a.GetComponent<CharacterController>()??a.gameObject.AddComponent<CharacterController>();ctrl.enabled=false;ctrl.height=1.8f;ctrl.center=Vector3.up*.9f;ctrl.radius=.33f;ctrl.skinWidth=.035f;ctrl.stepOffset=.28f;ctrl.minMoveDistance=0;ctrl.enabled=true;return a;}
+ public void Begin(Mode m){if(Playing||finished||!Player)return;mode=m;Playing=true;startTime=Time.time;protectedUntil=startTime+8;ZoneSeconds=MapRadius>200?55:25;nextDrop=startTime+80;int count=Mathf.Min(spawns.Length-1,m==Mode.BattleRoyale?19:4);for(int i=0;i<count;i++){int index=m==Mode.BattleRoyale?1+i*(spawns.Length-1)/count:i+1;Vector3 p=spawns[index].position;if(m!=Mode.BattleRoyale&&Vector3.Distance(p,spawns[0].position)>130){p=spawns[0].position+Quaternion.Euler(0,i*90,0)*Vector3.forward*35;}var a=Spawn(p);a.gameObject.AddComponent<OZBot>().Init(this,a);bots.Add(a);}
  SpawnLoot();
  if (mode==Mode.BattleRoyale) {
   Vector3 drop = spawns[0].position + Vector3.up * 24;
@@ -184,7 +200,7 @@ public sealed class OZGame : MonoBehaviour {
    reserve[reloadWeapon]-=loaded;
    reloadUntil=0;
   }
-  bool shootDesktop=!Application.isMobilePlatform && Input.GetMouseButton(0) &&
+  bool shootDesktop=!PointerOverHud && !Application.isMobilePlatform && Input.GetMouseButton(0) &&
    Input.mousePosition.y>Screen.height*.3f;
   bool pressed=Trigger||shootDesktop;
   if (!Deploying && pressed && (!SingleShot||!shotHeld) && reloadUntil==0 && Time.time>=nextShot && Ammo>0) Shoot();
@@ -326,6 +342,11 @@ public sealed class OZGame : MonoBehaviour {
   }
   // Populate interiors, not just the spawn rings. Limit to 48 extra pickups on mobile.
   int extra=0;
+  var chart=FindAnyObjectByType<OZMapChart>();
+  if(chart && chart.supplies!=null)
+   foreach(var site in chart.supplies)
+    if(Physics.Raycast(site+Vector3.up,Vector3.down,out var surface,2,~0,QueryTriggerInteraction.Ignore))
+     loot.Add(OZLoot.Create((OZLoot.Kind)(extra++%4),surface.point,effectsMaterial));
   foreach(var door in doors){if(!door||extra>=48)continue;var point=door.transform.position+door.transform.forward*2.3f+door.transform.right;
    if(Physics.Raycast(point+Vector3.up*1.5f,Vector3.down,out var floor,4,~0,QueryTriggerInteraction.Ignore)){loot.Add(OZLoot.Create((OZLoot.Kind)(extra%4),floor.point,effectsMaterial));extra++;}
   }

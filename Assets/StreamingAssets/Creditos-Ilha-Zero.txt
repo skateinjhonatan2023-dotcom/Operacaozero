@@ -1,0 +1,18 @@
+OPERATION ZERO | Nova Esperança
+
+Modular Urban Apartments Facade — James Ray Cock. Seleção de módulos, edifício montado com interior, níveis de detalhe, colisão e redução das texturas.
+https://polyhaven.com/a/modular_urban_apartments_facade
+
+Island Tree 01 — Rob Tuytel e Rico Cilliers. Duas malhas simplificadas com materiais e transparência das folhas.
+https://polyhaven.com/a/island_tree_01
+
+Wooden Crate 02 — James Ray Cock e Jurita Burger. Conversão para FBX, mapas PBR reamostrados e empacotados.
+https://polyhaven.com/a/wooden_crate_02
+
+Todos os três modelos sob CC0 1.0. https://polyhaven.com/license
+
+Ícones do HUD — Lorc (Sprint e Dodging) e Delapouite (Jump Across, Kneeling, Backpack, Crosshair e Reload Gun Barrel), de Game-icons.net. Fundo removido, pictogramas monocromáticos rasterizados para o HUD.
+https://game-icons.net/
+Licença Creative Commons Atribuição 3.0: https://creativecommons.org/licenses/by/3.0/
+
+Hangar, modelos dos veículos e demais pictogramas desta revisão são originais do projeto.

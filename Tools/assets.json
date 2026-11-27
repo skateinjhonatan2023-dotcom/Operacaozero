@@ -269,5 +269,155 @@
     "source": "https://polyhaven.com/a/kloofendal_48d_partly_cloudy_puresky",
     "license": "CC0-1.0",
     "download": "https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/kloofendal_48d_partly_cloudy_puresky_1k.hdr"
+  },
+  "Assets/Content/Harbor/MercadoCollision.fbx": {
+    "bytes": 32684,
+    "sha256": "ba97b2dd8ef5c7c1511944647e612d7192a477b7f431afe07c20186179f25f06",
+    "source": "https://polyhaven.com/a/modular_urban_apartments_facade",
+    "license": "CC0-1.0"
+  },
+  "Assets/Content/Harbor/Bark.png": {
+    "bytes": 367728,
+    "sha256": "4bc36e6ec7075088f49a87a1e1fe1fc9ee8ac7dcfb9af5a22db5a57d9796d627",
+    "source": "https://polyhaven.com/a/island_tree_01",
+    "license": "CC0-1.0"
+  },
+  "Assets/Content/Harbor/Facade_plaster_diff.jpg": {
+    "bytes": 31936,
+    "sha256": "464faaf068cb53a0f6c7cf9f62e9c20d48a8795ed98370951dfe4087623e960f",
+    "source": "https://polyhaven.com/a/modular_urban_apartments_facade",
+    "license": "CC0-1.0"
+  },
+  "Assets/Content/Harbor/IslandTreeFar.fbx": {
+    "bytes": 236716,
+    "sha256": "ad7dcb138f8e5448231dbe2e6ab310048f71e9eadc9f9eb584fea5c8b3fe346e",
+    "source": "https://polyhaven.com/a/island_tree_01",
+    "license": "CC0-1.0"
+  },
+  "Assets/Content/Harbor/Branches.png": {
+    "bytes": 285500,
+    "sha256": "112cb7892be7e7e455ed7ffff93b2e7fef149dc9727b69e7aad0d0c7ef687780",
+    "source": "https://polyhaven.com/a/island_tree_01",
+    "license": "CC0-1.0"
+  },
+  "Assets/Content/Harbor/Facade_objects_diff.jpg": {
+    "bytes": 55696,
+    "sha256": "7c8f7551f4718fa8fb12fad5703ed13a8cbf3d3fdcce1de57bd3a1d3518dd261",
+    "source": "https://polyhaven.com/a/modular_urban_apartments_facade",
+    "license": "CC0-1.0"
+  },
+  "Assets/Content/Harbor/Facade_trim_01_nor_gl.jpg": {
+    "bytes": 59767,
+    "sha256": "07607f325bb2a314d384fd8e32102b7ca0ea172c2c53210e48e03c7b3ba3e4de",
+    "source": "https://polyhaven.com/a/modular_urban_apartments_facade",
+    "license": "CC0-1.0"
+  },
+  "Assets/Content/Harbor/IslandTree.fbx": {
+    "bytes": 1236940,
+    "sha256": "2acbf554b531b9c96066f5910cc1702ce4d8f70f726f7a186841a5c687f73993",
+    "source": "https://polyhaven.com/a/island_tree_01",
+    "license": "CC0-1.0"
+  },
+  "Assets/Content/Harbor/ChestNormal.png": {
+    "bytes": 316749,
+    "sha256": "19e01bf9d1dba422558050b840bbde11b4c6e27c27d33eef6a59dbe4041b7c96",
+    "source": "https://polyhaven.com/a/wooden_crate_02",
+    "license": "CC0-1.0"
+  },
+  "Assets/Content/Harbor/Mercado.fbx": {
+    "bytes": 320956,
+    "sha256": "e1b2fc97ab9a854f9d763b8a29cb0a260ae0882a29dd54347ce2a3129dc554ca",
+    "source": "https://polyhaven.com/a/modular_urban_apartments_facade",
+    "license": "CC0-1.0"
+  },
+  "Assets/Content/Harbor/Leaves.png": {
+    "bytes": 148458,
+    "sha256": "67bf55a1b8e8102bf0f3b60dd9e40f1695d2f9d6a96b788b3b56d381b1ced725",
+    "source": "https://polyhaven.com/a/island_tree_01",
+    "license": "CC0-1.0"
+  },
+  "Assets/Content/Harbor/ChestColor.png": {
+    "bytes": 418034,
+    "sha256": "856828205d336db459c4cb671f6bd213d9f4cb62b4ceacf6d221d718c16d23ad",
+    "source": "https://polyhaven.com/a/wooden_crate_02",
+    "license": "CC0-1.0"
+  },
+  "Assets/Content/Harbor/MercadoFar.fbx": {
+    "bytes": 120908,
+    "sha256": "fce5f617cb280e7953743f0bcec45f9322207ad7f7cadff3ded57f799ba811e7",
+    "source": "https://polyhaven.com/a/modular_urban_apartments_facade",
+    "license": "CC0-1.0"
+  },
+  "Assets/Content/Harbor/FreightChest.fbx": {
+    "bytes": 196092,
+    "sha256": "bdd28cd92ddf66712453c3b11f6429e4a3c0334dfb2cdfba9eb558625c1d256e",
+    "source": "https://polyhaven.com/a/wooden_crate_02",
+    "license": "CC0-1.0"
+  },
+  "Assets/Content/Harbor/Facade_plaster_nor_gl.jpg": {
+    "bytes": 52725,
+    "sha256": "d6c8902b5c7ed1dd4515ee730fd77b9dba87daaf48ad90ff94ec894ae0eff911",
+    "source": "https://polyhaven.com/a/modular_urban_apartments_facade",
+    "license": "CC0-1.0"
+  },
+  "Assets/Content/Harbor/ChestMask.png": {
+    "bytes": 474638,
+    "sha256": "b71b22411bbaa931490574cd18119c5710342b98e37ce86dcf59164ddb4308a3",
+    "source": "https://polyhaven.com/a/wooden_crate_02",
+    "license": "CC0-1.0"
+  },
+  "Assets/Content/Harbor/Facade_objects_nor_gl.jpg": {
+    "bytes": 46616,
+    "sha256": "7fbe5447c69326548ec5ff21ffdac21ae01bedcc080ad953f76952f4814d9163",
+    "source": "https://polyhaven.com/a/modular_urban_apartments_facade",
+    "license": "CC0-1.0"
+  },
+  "Assets/Content/Harbor/Facade_trim_01_diff.jpg": {
+    "bytes": 45971,
+    "sha256": "77e58f5039c5442a2ac675207a503fc614eab2a52a7aff8138f268f740ab2ad6",
+    "source": "https://polyhaven.com/a/modular_urban_apartments_facade",
+    "license": "CC0-1.0"
+  },
+  "Assets/Resources/OZCombatHUD/run.png": {
+    "bytes": 3308,
+    "sha256": "ca671922a10aed094f35bd22f68c87d6185dedbfc977fa210fa89dea290675dc",
+    "source": "https://github.com/game-icons/icons/blob/82d948812bfe3f269ef8f731dcdb07b08160edc4/lorc/sprint.svg",
+    "license": "CC-BY-3.0"
+  },
+  "Assets/Resources/OZCombatHUD/jump.png": {
+    "bytes": 2663,
+    "sha256": "dba9bd250aaa93c5903b5a30156b9ec58088ed7f8e7972df4173f5bdf35fce16",
+    "source": "https://github.com/game-icons/icons/blob/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/jump-across.svg",
+    "license": "CC-BY-3.0"
+  },
+  "Assets/Resources/OZCombatHUD/bag.png": {
+    "bytes": 4580,
+    "sha256": "ba8a9d42eb3cf7990ccdc7a33d115c78af2dbea3757314ae5606fdd455970317",
+    "source": "https://github.com/game-icons/icons/blob/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/backpack.svg",
+    "license": "CC-BY-3.0"
+  },
+  "Assets/Resources/OZCombatHUD/crouch.png": {
+    "bytes": 2883,
+    "sha256": "31d908518408f43b6e7eb37ac3100c631cb1a91d14db2aefb4d846963ae39b2b",
+    "source": "https://github.com/game-icons/icons/blob/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/kneeling.svg",
+    "license": "CC-BY-3.0"
+  },
+  "Assets/Resources/OZCombatHUD/aim.png": {
+    "bytes": 3241,
+    "sha256": "8986e7e0556558cde5a276336193289958c65399fc3f32da10311115565acd93",
+    "source": "https://github.com/game-icons/icons/blob/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/crosshair.svg",
+    "license": "CC-BY-3.0"
+  },
+  "Assets/Resources/OZCombatHUD/reload.png": {
+    "bytes": 5270,
+    "sha256": "4986966042f36bc0389c1be8bd9205b181625ee5e16898fd8f6752f73ac24beb",
+    "source": "https://github.com/game-icons/icons/blob/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/reload-gun-barrel.svg",
+    "license": "CC-BY-3.0"
+  },
+  "Assets/Resources/OZCombatHUD/slide.png": {
+    "bytes": 3278,
+    "sha256": "7e5acbae850dd66ff4e66c5fa17c295142637efec04cd3f6830d2ec11c9ebcf0",
+    "source": "https://github.com/game-icons/icons/blob/82d948812bfe3f269ef8f731dcdb07b08160edc4/lorc/dodging.svg",
+    "license": "CC-BY-3.0"
   }
 }
