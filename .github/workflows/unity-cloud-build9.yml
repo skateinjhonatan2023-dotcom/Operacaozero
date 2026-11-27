@@ -1,0 +1,129 @@
+name: Unity Cloud Build 9 - V0.7.1 Nova Esperanca and Multitouch
+on:
+  push:
+    branches: [automation/unity-api-check]
+    paths: ['.github/workflows/unity-cloud-build9.yml']
+permissions:
+  contents: read
+concurrency:
+  group: unity-cloud-build9
+  cancel-in-progress: false
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 034e63e7438708a131e14fa0036384d05fe021c7
+          persist-credentials: false
+      - name: Confirm revision and asset integrity
+        run: |
+          test "$(git rev-parse HEAD)" = "034e63e7438708a131e14fa0036384d05fe021c7"
+          python3 Tools/preflight.py
+      - name: Parse every Unity C# file
+        run: |
+          python3 -m pip install --quiet tree-sitter tree-sitter-c-sharp
+          python3 - <<'PY'
+          from pathlib import Path
+          from tree_sitter import Language, Parser
+          import tree_sitter_c_sharp
+          parser = Parser(Language(tree_sitter_c_sharp.language()))
+          files = sorted(Path("Assets").rglob("*.cs"))
+          assert files, "No Unity scripts"
+          for path in files:
+              tree = parser.parse(path.read_bytes())
+              if tree.root_node.has_error:
+                  raise SystemExit(f"C# syntax error: {path}")
+              print(f"Syntax OK: {path}")
+          print(f"Parsed {len(files)} Unity C# scripts")
+          PY
+  unity:
+    needs: validate
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - name: Start one clean Unity build and monitor
+        env:
+          UNITY_BUILD_API_KEY: ${{ secrets.UNITY_BUILD_API_KEY }}
+          PYTHONUNBUFFERED: '1'
+        shell: python
+        run: |
+          import os, json, urllib.request, urllib.error, time, re
+          base = "https://build-api.cloud.unity3d.com/api/v1/orgs/4674291933911/projects/5240018a-e89a-427b-a7f1-f87352632e31/buildtargets/operacao-zero-v0-6-android"
+          revision = "034e63e7438708a131e14fa0036384d05fe021c7"
+          key = os.environ["UNITY_BUILD_API_KEY"].strip()
+          if not key:
+              raise SystemExit("Unity API credential is missing")
+          class NoRedirect(urllib.request.HTTPRedirectHandler):
+              def redirect_request(self, req, fp, code, msg, headers, newurl):
+                  return None
+          opener = urllib.request.build_opener(NoRedirect())
+          def request(path, body=None, method=None, missing_ok=False):
+              headers = {"Authorization":"Basic "+key,"Accept":"application/json"}
+              if body is not None:
+                  headers["Content-Type"] = "application/json"
+              req = urllib.request.Request(base+path, data=json.dumps(body).encode() if body is not None else None, headers=headers, method=method)
+              try:
+                  with opener.open(req, timeout=35) as response:
+                      return json.load(response)
+              except urllib.error.HTTPError as e:
+                  if missing_ok and e.code == 404:
+                      return None
+                  raise SystemExit("Unity API HTTP "+str(e.code)+" on "+str(method or "GET"))
+          def status(d):
+              fields = ("build","buildStatus","requestedRevision","lastBuiltRevision","unityVersion","scmBranch","finished")
+              print(json.dumps({k:d.get(k) for k in fields},ensure_ascii=True))
+          target = request("")
+          settings = target.get("settings", {})
+          hook = ((settings.get("advanced") or {}).get("unity") or {}).get("preExportMethod")
+          print("Pre-export hook configured:",hook=="OZBuild.CloudPrepare")
+          if hook != "OZBuild.CloudPrepare":
+              raise SystemExit("Required Unity scene preparation hook not configured")
+          previous = request("/builds/8")
+          if previous.get("buildStatus") != "success":
+              raise SystemExit("Build 8 not confirmed successful; no new build")
+          existing = request("/builds/9",missing_ok=True)
+          if existing is None:
+              payload = {"clean":True,"branch":"codex/v07-new-generation","commit":revision}
+              print("Requesting clean build for",revision)
+              result = request("/builds",payload,"POST")
+              entries = result if isinstance(result,list) else [result]
+              if len(entries)!=1 or not isinstance(entries[0],dict):
+                  raise SystemExit("Unexpected start response; inspect status before retrying")
+              d = entries[0]
+              status(d)
+              number = d.get("build")
+              if number != 9:
+                  raise SystemExit("Unexpected build number; no further build will be started")
+          else:
+              number = 9
+              d = existing
+              if d.get("requestedRevision") != revision:
+                  raise SystemExit("Existing build 9 belongs to a different revision; do not start another automatically")
+              print("Build 9 already exists; no duplicate requested")
+              status(d)
+          for attempt in range(72):
+              d = request("/builds/"+str(number))
+              status(d)
+              actual = d.get("requestedRevision")
+              built = d.get("lastBuiltRevision")
+              if actual and actual != revision:
+                  raise SystemExit("Requested revision mismatch; no further build will be started")
+              if built and built != revision:
+                  raise SystemExit("Checked out revision mismatch; no further build will be started")
+              state = str(d.get("buildStatus","")).lower()
+              if state in ("success","failure","failed","canceled","cancelled","error"):
+                  print("Terminal Unity status:",state)
+                  print("Expected revision checked out:",built==revision)
+                  if state != "success" or built != revision:
+                      report = d.get("buildReport") or {}
+                      print("Build report error count:", report.get("errors"))
+                      for item in d.get("failureDetails") or []:
+                          print("Failure category:",str(item.get("displayName",""))[:150])
+                      raise SystemExit("Unity build not successful")
+                  print("Build succeeded; inspect APK artifact before distribution")
+                  break
+              time.sleep(30)
+          else:
+              print("Monitoring window ended; no duplicate build requested")
