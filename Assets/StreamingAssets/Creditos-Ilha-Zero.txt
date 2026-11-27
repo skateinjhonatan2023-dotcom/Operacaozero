@@ -16,3 +16,15 @@ https://game-icons.net/
 Licença Creative Commons Atribuição 3.0: https://creativecommons.org/licenses/by/3.0/
 
 Hangar, modelos dos veículos e demais pictogramas desta revisão são originais do projeto.
+
+V0.8 — Operador de campo
+FREE [Military Soldier] RIGGED, de BAMEN. Adaptação de rig e animações por cktang88. Conversão para FBX, malha de distância e materiais de uniforme para esta versão.
+https://sketchfab.com/3d-models/free-military-soldier-rigged-e9c56308a67d4a3db62e914fafa4d198
+https://github.com/cktang88/3d-fps/blob/main/README.md#credits--licences
+Captura de movimento 100STYLE de Ian Mason, Sebastian Starke e Taku Komura, adaptada por cktang88. Modelo e capturas sob CC BY 4.0.
+https://zenodo.org/records/8127870
+https://creativecommons.org/licenses/by/4.0/
+Animações complementares de Quaternius, CC0. https://quaternius.com
+Piso de terra derivado de Grass Ground e Coast Rocks 01 da Poly Haven, CC0.
+https://polyhaven.com/a/grass_ground
+https://polyhaven.com/a/coast_rocks_01

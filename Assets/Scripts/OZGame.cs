@@ -127,6 +127,10 @@ public sealed class OZGame : MonoBehaviour {
   else if (mode!=Mode.Treino && bots.TrueForAll(bot=>!bot||bot.Dead)) Finish(true);
  }
 
+ Vector3 planarVelocity;
+ float jumpBufferedUntil=-1, lastGrounded=-1;
+ float boom, aimBlend, shoulderBlend, pivotHeight;
+ const float StandHeight=1.8f,CrouchHeight=1.18f;
  void MovePlayer(float dt) {
   Vector2 input=Move+new Vector2(Input.GetAxisRaw("Horizontal"),Input.GetAxisRaw("Vertical"));
   input=Vector2.ClampMagnitude(input,1);
@@ -142,30 +146,41 @@ public sealed class OZGame : MonoBehaviour {
   Vector3 desired=heading*new Vector3(input.x,0,input.y);
   bool sprint=Sprint||Input.GetKey(KeyCode.LeftShift)||(AutoSprint&&input.y>.88f);
   bool crouch=Crouch||Input.GetKey(KeyCode.LeftControl);
-  if (!Deploying && cc.isGrounded && Time.time>=slideUntil && (Slide||Input.GetKeyDown(KeyCode.C))) {
-   slideDirection=desired.sqrMagnitude>.01f?desired.normalized:heading*Vector3.forward;
+  if (!Deploying && !crouch && cc.isGrounded && planarVelocity.sqrMagnitude>6.25f &&
+      Time.time>=slideUntil && (Slide||Input.GetKeyDown(KeyCode.C)))
+  {
+   slideDirection=planarVelocity.normalized;
    slideUntil=Time.time+.55f;
   }
   Slide=false;
   bool sliding=Time.time<slideUntil;
-  bool low=!Deploying && (crouch||sliding || (cc.height<1.5f && !CanStand()));
-  float height=low?1.2f:1.8f;
-  if(!Mathf.Approximately(cc.height,height)){cc.height=height;cc.center=Vector3.up*height*.5f;}
-  Vector3 facing=sliding?slideDirection:desired;
-  Quaternion bodyHeading=(!FPS&&!Aim&&!Trigger&&facing.sqrMagnitude>.01f)
-   ? Quaternion.LookRotation(facing) : heading;
-  Player.transform.rotation=FPS||Aim||Trigger?bodyHeading:
-   Quaternion.Slerp(Player.transform.rotation,bodyHeading,1f-Mathf.Exp(-16f*dt));
-
-  if (Deploying) vy=-5;
-  else {
-   if (cc.isGrounded) vy=Jump||Input.GetKeyDown(KeyCode.Space) ? 5.8f : -2;
-   vy-=18*dt;
-  }
+  bool low=!Deploying && (crouch || sliding || (cc.height<StandHeight-.01f && !CanStand()));
+  float height=Mathf.MoveTowards(cc.height,low ? CrouchHeight : StandHeight,dt*4.8f);
+  if(!Mathf.Approximately(height,cc.height)){cc.height=height;cc.center=Vector3.up*(height*.5f);}
+  bool strafe=FPS || Aim || Trigger;
+  float speed=Deploying ? 8f : low ? 1.25f : Aim ? 1.7f : sprint ? 4.35f : 2.65f;
+  if(strafe && (Mathf.Abs(input.x)>.65f || input.y<-.25f) && !Deploying) speed=Mathf.Min(speed,1.65f);
+  bool grounded=cc.isGrounded && !Deploying;
+  if(grounded && vy<=0)lastGrounded=Time.time;
+  if(Jump || Input.GetKeyDown(KeyCode.Space))jumpBufferedUntil=Time.time+.1f;
   Jump=false;
-  float speed=Deploying ? 8 : sliding ? 9 : low ? 2 : sprint && !Aim ? 6 : 3.8f;
-  Vector3 movement=sliding ? slideDirection : desired;
-  var collision=cc.Move((movement*speed+Vector3.up*vy)*dt);
+  Vector3 requested=desired*speed;
+  float response=grounded ? (input.sqrMagnitude<.001f ? 17f : 11f) : 5f;
+  planarVelocity=sliding ? slideDirection*Mathf.Lerp(2.1f,6.6f,(slideUntil-Time.time)/.55f)
+                         : Vector3.MoveTowards(planarVelocity,requested,response*dt);
+  Vector3 facing=strafe ? heading*Vector3.forward : planarVelocity;
+  if(facing.sqrMagnitude>.03f)
+   Player.transform.rotation=Quaternion.RotateTowards(Player.transform.rotation,Quaternion.LookRotation(facing),dt*(strafe ? 720 : 500));
+  Vector3 surfaceVelocity=planarVelocity;
+  if(grounded && Player.HasFloor)
+   surfaceVelocity=Vector3.ProjectOnPlane(planarVelocity,Player.FloorNormal).normalized*planarVelocity.magnitude;
+  if(Deploying)vy=-5;
+  else if(!low && jumpBufferedUntil>=Time.time && Time.time-lastGrounded<.09f)
+  {
+   vy=5.15f;jumpBufferedUntil=-1;lastGrounded=-1;
+  }
+  else vy=grounded && vy<=0 ? -2.4f : Mathf.Max(-36f,vy-19.6f*dt);
+  var collision=cc.Move((surfaceVelocity+Vector3.up*vy)*dt);
   if (sliding && (collision&CollisionFlags.Sides)!=0) slideUntil=0;
   if (vy>0 && (collision&CollisionFlags.Above)!=0) vy=0;
   if (Deploying && ((collision&CollisionFlags.Below)!=0 || (GroundHeight(Player.transform.position,out float ground)&&Player.transform.position.y<=ground+.15f))) {
@@ -173,7 +188,10 @@ public sealed class OZGame : MonoBehaviour {
    startTime=Time.time;protectedUntil=startTime+8;nextDrop=startTime+80;
    Destroy(canopy);
   }
-  Player.Pose(movement.magnitude*speed,Aim,low,Deploying||!cc.isGrounded,reloadUntil>0);
+  Vector3 travelled=Vector3.ProjectOnPlane(cc.velocity,Vector3.up);
+  if((collision&CollisionFlags.Sides)!=0)planarVelocity=Vector3.ClampMagnitude(planarVelocity,travelled.magnitude);
+  Vector3 local=Player.transform.InverseTransformDirection(travelled.normalized);
+  Player.Pose(travelled.magnitude,Aim,low,Deploying||!cc.isGrounded,reloadUntil>0,new Vector2(local.x,local.z));
  }
 
  bool CanStand() {
@@ -240,7 +258,7 @@ public sealed class OZGame : MonoBehaviour {
   if(InteractRequested||Input.GetKeyDown(KeyCode.F)){if(!Deploying&&nearbyVehicle)EnterVehicle(nearbyVehicle);else if(nearbyDoor)nearbyDoor.Toggle();}
   InteractRequested=false;
  }
- void EnterVehicle(OZVehicle car){driving=car;cc.enabled=false;car.BeginDrive();FPS=false;Aim=false;Player.transform.position=car.Seat;Player.transform.rotation=car.transform.rotation;SetFirstPersonBody(true);}
+ void EnterVehicle(OZVehicle car){planarVelocity=Vector3.zero;vy=0;jumpBufferedUntil=lastGrounded=-1;driving=car;cc.enabled=false;car.BeginDrive();FPS=false;Aim=false;Player.transform.position=car.Seat;Player.transform.rotation=car.transform.rotation;SetFirstPersonBody(true);}
  void Drive(float dt){Vector2 input=Vector2.ClampMagnitude(Move+new Vector2(Input.GetAxisRaw("Horizontal"),Input.GetAxisRaw("Vertical")),1);driving.Tick(input,dt);Player.transform.position=driving.Seat;Player.transform.rotation=driving.transform.rotation;yaw=driving.transform.eulerAngles.y;Look=Vector2.zero;Player.Pose(0,false);}
  void ExitVehicle(){
   if(!driving)return;
@@ -268,8 +286,9 @@ public sealed class OZGame : MonoBehaviour {
   if(distance<.001f)return pivot;
   Vector3 direction=offset/distance;
   int count=Physics.SphereCastNonAlloc(pivot,.18f,direction,cameraHits,distance,~0,QueryTriggerInteraction.Ignore);
-  var hits=count==cameraHits.Length?Physics.SphereCastAll(pivot,.18f,direction,distance,~0,QueryTriggerInteraction.Ignore):cameraHits;
-  int limit=count==cameraHits.Length?hits.Length:count;
+  if(count==cameraHits.Length)return pivot;
+  var hits=cameraHits;
+  int limit=count;
   for(int i=0;i<limit;i++)
    if(hits[i].collider&&hits[i].collider.GetComponentInParent<OZActor>()!=Player)
     distance=Mathf.Min(distance,Mathf.Max(.02f,hits[i].distance-.08f));
@@ -277,12 +296,24 @@ public sealed class OZGame : MonoBehaviour {
  }
  void UpdateCamera(bool instant) {
   SetFirstPersonBody(FPS||Driving);
-  Vector3 pivot=Player.transform.position+Vector3.up*(cc&&cc.height<1.5f?1.1f:1.65f);
+  float blend=instant ? 1 : 1-Mathf.Exp(-CameraSmooth*Time.deltaTime);
+  aimBlend=Mathf.Lerp(aimBlend,Aim?1:0,blend);
+  shoulderBlend=Mathf.Lerp(shoulderBlend,LeftShoulder?-1:1,blend);
+  pivotHeight=Mathf.Lerp(pivotHeight,Driving ? 1.65f : cc.height*.88f,blend);
+  Vector3 pivot=Player.transform.position+Vector3.up*pivotHeight;
   Quaternion q=Quaternion.Euler(pitch,yaw,0);
-  Vector3 offset=Driving?q*new Vector3(0,1.7f,-6.5f):FPS?Vector3.zero:q*new Vector3(LeftShoulder?-.65f:.65f,.18f,Aim?-2.3f:-4.3f);
-  Vector3 target=SafeCameraPosition(pivot,pivot+offset);
-  Vector3 position=instant||FPS?target:SafeCameraPosition(pivot,Vector3.Lerp(view.transform.position,target,1f-Mathf.Exp(-CameraSmooth*Time.deltaTime)));
-  if(GroundHeight(position,out float cameraGround))position.y=Mathf.Max(position.y,cameraGround+.22f);
+  float distance=Mathf.Lerp(3.3f,1.72f,aimBlend);
+  Vector3 offset=Driving ? q*new Vector3(0,1.65f,-6.3f) : FPS ? Vector3.zero :
+    q*new Vector3(shoulderBlend*Mathf.Lerp(.52f,.39f,aimBlend),Mathf.Lerp(.28f,.09f,aimBlend),-distance);
+  Vector3 allowed=SafeCameraPosition(pivot,pivot+offset);
+  float clear=Vector3.Distance(pivot,allowed);
+  boom=instant || clear<boom ? clear : Mathf.Lerp(boom,clear,blend);
+  Vector3 position=pivot+offset.normalized*boom;
+  if(GroundHeight(position,out float cameraGround) && position.y<cameraGround+.20f)
+  {
+   position.y=cameraGround+.20f;
+   position=SafeCameraPosition(pivot,position);
+  }
   view.transform.SetPositionAndRotation(position,q);
   view.fieldOfView=Mathf.Lerp(view.fieldOfView,Aim?Mathf.Min(45,CameraFov):CameraFov,1f-Mathf.Exp(-10f*Time.deltaTime));
  }

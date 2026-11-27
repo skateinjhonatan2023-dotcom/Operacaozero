@@ -37,7 +37,7 @@ Shader "Operation Zero/Coastal Ground"
             half4 Frag(Output i):SV_Target
             {
                 half3 grass=SAMPLE_TEXTURE2D(_BaseMap,sampler_BaseMap,i.uv).rgb;
-                half3 soil=SAMPLE_TEXTURE2D(_SoilMap,sampler_SoilMap,i.uv*.78).rgb*half3(.73,.64,.47);
+                half3 soil=SAMPLE_TEXTURE2D(_SoilMap,sampler_SoilMap,i.uv*.78).rgb*half3(.98,.96,.90);
                 half3 albedo=lerp(grass,soil,i.paintFog.x)*lerp(.82,1.10,i.paintFog.y);
                 half3 n=normalize(i.normal);
                 half3 tangent=normalize(half3(n.y,-n.x,0));

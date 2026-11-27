@@ -67,26 +67,35 @@ public static class OZBuild
     static OZActor CreateTemplate(out GameObject rifle)
     {
         var soldier = AssetDatabase.LoadAssetAtPath<GameObject>(Content + "Soldier.prefab");
-        var actor = soldier ? (GameObject)PrefabUtility.InstantiatePrefab(soldier) : OZContent.CreateActor();
+        GameObject actor;
+        try {actor=OZFieldOperator.Create();}
+        catch(Exception e) when(e is InvalidOperationException || e is ArgumentException || e is UnityException)
+        {
+            Debug.LogWarning("OZ_BUILD: operador de campo indisponível. Usando a reserva da V0.7. "+e.Message);
+            actor=soldier ? (GameObject)PrefabUtility.InstantiatePrefab(soldier) : OZContent.CreateActor();
+        }
         actor.name = "Operador (modelo)";
         var template = actor.GetComponent<OZActor>() ?? actor.AddComponent<OZActor>();
         if (!actor.GetComponentInChildren<SkinnedMeshRenderer>(true) ||
             !actor.GetComponentInChildren<Animator>(true))
             throw new InvalidOperationException("O operador precisa de malha skinned e Animator.");
 
-        template.idle = Clip("Idle", "Idle_Loop");
-        template.walk = Clip("Walk", "Walk_Loop");
-        template.run = Clip("Run", "Sprint_Loop");
-        template.aim = Clip("Aim", "Pistol_Aim_Neutral");
-        template.fire = Clip("Fire", "Pistol_Shoot");
-        template.death = Clip("Death", "Death01");
-        if (!soldier)
+        if (!actor.GetComponent<OZFieldRig>())
         {
-            template.crouch = OZContent.Animation("Crouch_Idle_Loop");
-            template.crouchWalk = OZContent.Animation("Crouch_Fwd_Loop");
-            template.airborne = OZContent.Animation("Jump_Loop");
-            template.reload = OZContent.Animation("Pistol_Reload");
-            template.hit = OZContent.Animation("Hit_Chest");
+            template.idle = Clip("Idle", "Idle_Loop");
+            template.walk = Clip("Walk", "Walk_Loop");
+            template.run = Clip("Run", "Sprint_Loop");
+            template.aim = Clip("Aim", "Pistol_Aim_Neutral");
+            template.fire = Clip("Fire", "Pistol_Shoot");
+            template.death = Clip("Death", "Death01");
+            if (!soldier)
+            {
+                template.crouch = OZContent.Animation("Crouch_Idle_Loop");
+                template.crouchWalk = OZContent.Animation("Crouch_Fwd_Loop");
+                template.airborne = OZContent.Animation("Jump_Loop");
+                template.reload = OZContent.Animation("Pistol_Reload");
+                template.hit = OZContent.Animation("Hit_Chest");
+            }
         }
 
         var grip = actor.GetComponentsInChildren<Transform>(true).FirstOrDefault(t => t.name == "WeaponGrip");
@@ -100,6 +109,7 @@ public static class OZBuild
         else
             rifle = OZContent.CreateRifle(grip);
 
+        if(actor.GetComponent<OZFieldRig>())rifle.transform.localPosition=Vector3.zero;
         if (!rifle.GetComponentInChildren<Renderer>(true))
             throw new InvalidOperationException("O rifle precisa de uma malha.");
         foreach (var collider in actor.GetComponentsInChildren<Collider>(true))
@@ -132,7 +142,9 @@ public static class OZBuild
     {
         var sun = new GameObject("Sun").AddComponent<Light>();
         sun.type = LightType.Directional;
-        sun.intensity = 1.35f;
+        sun.intensity = 1.27f;
+        sun.color = new Color(1f,.94f,.83f);
+        sun.shadowStrength = .83f;
         sun.shadows = LightShadows.Soft;
         sun.transform.rotation = Quaternion.Euler(48, -35, 0);
         RenderSettings.sun = sun;
@@ -140,8 +152,8 @@ public static class OZBuild
         RenderSettings.fog = true;
         RenderSettings.fogColor = new Color(.65f, .75f, .8f);
         RenderSettings.fogMode = FogMode.Linear;
-        RenderSettings.fogStartDistance = 290;
-        RenderSettings.fogEndDistance = 850;
+        RenderSettings.fogStartDistance = 208;
+        RenderSettings.fogEndDistance = 820;
     }
 
     [MenuItem("Operation Zero/Validar cena nativa salva")]
@@ -183,8 +195,8 @@ public static class OZBuild
         Prepare();
         ValidateSavedScene();
         PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.Android, "com.operationzero.game");
-        PlayerSettings.bundleVersion = "0.7.1";
-        PlayerSettings.Android.bundleVersionCode = 8;
+        PlayerSettings.bundleVersion = "0.8";
+        PlayerSettings.Android.bundleVersionCode = 9;
         PlayerSettings.Android.minSdkVersion = AndroidSdkVersions.AndroidApiLevel26;
         PlayerSettings.Android.targetArchitectures = AndroidArchitecture.ARM64;
         PlayerSettings.SetScriptingBackend(NamedBuildTarget.Android, ScriptingImplementation.IL2CPP);

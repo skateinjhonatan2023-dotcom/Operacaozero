@@ -36,7 +36,7 @@ public sealed class OZBot:MonoBehaviour {
   if(dir.sqrMagnitude>.01f)transform.rotation=Quaternion.Slerp(transform.rotation,Quaternion.LookRotation(dir),Time.deltaTime*8);
   if(OZGame.RecoverGround(body))vertical=0;vertical=body.isGrounded?-2:vertical-18*Time.deltaTime;body.Move((dir*speed+Vector3.up*vertical)*Time.deltaTime);if(OZGame.RecoverGround(body))vertical=0;
   if(reloadUntil>0&&Time.time>=reloadUntil){reloadUntil=0;rounds=12;}
-  actor.Pose(speed,visible&&speed==0,false,!body.isGrounded,reloadUntil>0);
+  actor.Pose(Vector3.ProjectOnPlane(body.velocity,Vector3.up).magnitude,visible&&speed==0,false,!body.isGrounded,reloadUntil>0);
   if(visible&&distance<36&&Time.time>=next&&reloadUntil==0&&CanSee(eye,game.Player.transform.position+Vector3.up*1.1f)){
    next=Time.time+Random.Range(.65f,1.5f);actor.Fire();rounds--;float chance=Mathf.Clamp01((.34f+.15f*game.BotDifficulty)*(1-distance/75f));
    if(Random.value<chance)game.BotHit(7+game.BotDifficulty*2,transform.position);

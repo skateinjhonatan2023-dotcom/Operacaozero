@@ -419,5 +419,35 @@
     "sha256": "7e5acbae850dd66ff4e66c5fa17c295142637efec04cd3f6830d2ec11c9ebcf0",
     "source": "https://github.com/game-icons/icons/blob/82d948812bfe3f269ef8f731dcdb07b08160edc4/lorc/dodging.svg",
     "license": "CC-BY-3.0"
+  },
+  "Assets/Content/FieldOperator/FieldColor.png": {
+    "bytes": 45021,
+    "sha256": "02bd6b9c22cd99fbab66bd9e47b3207e68046d653fcaf99a22daf7eef494cdac",
+    "source": "Assets/Content/Lobby/Weave.png; Assets/Content/Lobby/Weave-Normal.png",
+    "license": "Produzido para Operação Zero"
+  },
+  "Assets/Content/FieldOperator/FieldMask.png": {
+    "bytes": 2246,
+    "sha256": "1f9f65def8615971153d7cca9d395754f425cbad8c27b932a9f816f34409d2d9",
+    "source": "Assets/Content/Lobby/Weave.png; Assets/Content/Lobby/Weave-Normal.png",
+    "license": "Produzido para Operação Zero"
+  },
+  "Assets/Content/FieldOperator/FieldNormal.png": {
+    "bytes": 5812,
+    "sha256": "db89a98f4421323209bbeb8683fd2d78095594ce8c38fb4ba97c3a70cc5cc2e9",
+    "source": "Assets/Content/Lobby/Weave.png; Assets/Content/Lobby/Weave-Normal.png",
+    "license": "Produzido para Operação Zero"
+  },
+  "Assets/Content/FieldOperator/FieldOperator.fbx": {
+    "bytes": 7634076,
+    "sha256": "d3936409247f9e031323040e1675de0500b1204d288d7af7003c104efa9fc106",
+    "source": "WebGame/assets/soldier.glb; WebGame/CREDITOS.txt",
+    "license": "CC-BY-4.0 and CC0-1.0"
+  },
+  "Assets/Content/Raw/earth-track.jpg": {
+    "bytes": 100547,
+    "sha256": "a10142e92ac3796d2dbe6b8815d8ff56d130b2e12a309a002c3e3e8cc23bd4c7",
+    "source": "https://polyhaven.com/a/grass_ground and https://polyhaven.com/a/coast_rocks_01",
+    "license": "CC0-1.0"
   }
 }

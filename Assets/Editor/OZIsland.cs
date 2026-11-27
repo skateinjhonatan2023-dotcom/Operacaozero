@@ -23,10 +23,10 @@ internal static class OZIsland
         OZCoastalProps.Import();
         var asphalt = Surface("Asphalt", "asphalt.jpg", Color.white);
         var concrete = Surface("Concrete", "concrete.jpg", Color.white);
-        var terrainData = AssetDatabase.LoadAssetAtPath<TerrainData>(Generated + "IlhaZeroTerrainV072.asset");
+        var terrainData = AssetDatabase.LoadAssetAtPath<TerrainData>(Generated + "IlhaZeroTerrainV080.asset");
         if (!terrainData)
         {
-            terrainData = new TerrainData { heightmapResolution = 513, size = new Vector3(2000, 100, 2000) };
+            terrainData = new TerrainData { heightmapResolution = 513, size = new Vector3(2000, 160, 2000) };
             var heights = new float[513, 513];
             for (int z = 0; z < 513; z++)
             for (int x = 0; x < 513; x++)
@@ -36,7 +36,12 @@ internal static class OZIsland
                 float hills = Mathf.PerlinNoise(wx * .004f + 13, wz * .004f + 27) * 24f +
                     Mathf.PerlinNoise(wx * .014f + 41, wz * .014f + 62) * 5f;
                 float mountain = Mathf.Exp(-((p-new Vector2(-440,500)).sqrMagnitude)/85000f)*45f;
-                float y = 12f + hills + mountain;
+                // Two offset ridgelines keep a readable silhouette from the town and coastal road.
+                float ridgeAxis=wz-226f-77f*Mathf.Sin(wx*.0065f);
+                float ridge=Mathf.Exp(-ridgeAxis*ridgeAxis/4400f)*Mathf.Exp(-wx*wx/145000f);
+                float crags=1f-Mathf.Abs(2*Mathf.PerlinNoise(wx*.016f+7,wz*.016f+13)-1);
+                float saddle=Mathf.Exp(-(p-new Vector2(260,-195)).sqrMagnitude/14000f);
+                float y = 12f+hills+mountain+ridge*(21+27*crags)+saddle*18;
                 foreach (var site in Districts)
                 {
                     float flat = 1f - Mathf.SmoothStep(0, 1, Mathf.InverseLerp(95, 160, Vector2.Distance(p, site)));
@@ -45,10 +50,10 @@ internal static class OZIsland
                     y = Mathf.Lerp(y, level, flat);
                 }
                 float coast = Mathf.SmoothStep(0,1,Mathf.InverseLerp(850,990,Mathf.Max(Mathf.Abs(wx),Mathf.Abs(wz))));
-                heights[z,x] = Mathf.Lerp(y, 1f, coast)/100f;
+                heights[z,x] = Mathf.Lerp(y, 1f, coast)/terrainData.size.y;
             }
             terrainData.SetHeights(0, 0, heights);
-            AssetDatabase.CreateAsset(terrainData, Generated + "IlhaZeroTerrainV072.asset");
+            AssetDatabase.CreateAsset(terrainData, Generated + "IlhaZeroTerrainV080.asset");
         }
 
         var root = new GameObject("Ilha Zero — 2 km");
@@ -87,6 +92,17 @@ internal static class OZIsland
 
         PaintGround(terrain,layer);
         BuildDistricts(root.transform, terrain, concrete, asphalt);
+        var grove=new System.Random(810);
+        foreach(var groveCenter in new[]{new Vector2(-124,132),new Vector2(156,164),new Vector2(-170,-140)})
+        {
+            for(int i=0;i<12;i++)
+            {
+                float angle=(float)grove.NextDouble()*2*Mathf.PI;
+                float radius=8f+36f*Mathf.Sqrt((float)grove.NextDouble());
+                Tree(root.transform,terrain,new Vector3(groveCenter.x+radius*Mathf.Cos(angle),0,
+                    groveCenter.y+radius*Mathf.Sin(angle)),4.3f+(float)grove.NextDouble()*2.7f);
+            }
+        }
         BuildTown(root.transform,terrain,concrete,asphalt);
         BuildLandmarks(root.transform,terrain,concrete,asphalt);
         // Use ordinary URP mesh renderers for the surface; retain the matching TerrainCollider.
@@ -236,7 +252,19 @@ internal static class OZIsland
                 site.y=Height(t,site);
                 if (d==Districts[1] && row!=0 && col==0)
                     OZCoastalProps.Market(area,site,row>0 ? 0 : 180);
-                else House(area,site,concrete,walls,roof,wood);
+                else
+                {
+                    var home=House(area,site,concrete,walls,roof,wood);
+                    home.rotation=Quaternion.Euler(0, row==0 ? col*90f : row<0 ? 180 : 0,0);
+                    if(row*col!=0)
+                    {
+                        var offset=new Vector3(col*5.7f,0,0);
+                        var wall=site+offset;
+                        wall.y=Height(t,wall);
+                        Block(area,"Muro de quintal",wall+Vector3.up*.52f,new Vector3(.22f,1.04f,6.8f),concrete);
+                        Block(area,"Arremate",wall+Vector3.up*1.07f,new Vector3(.31f,.09f,6.9f),walls);
+                    }
+                }
             }
             for(int k=0;k<20;k++){
                 var q=new Vector3(d.x+rng.Next(-85,86),0,d.y+rng.Next(-85,86));
@@ -257,7 +285,7 @@ internal static class OZIsland
             if(!near && t.terrainData.GetSteepness((q.x+1000)/2000,(q.z+1000)/2000)<30)Tree(parent,t,q,3.5f+(float)rng.NextDouble()*4);
         }
     }
-    static void House(Transform parent,Vector3 s,Material concrete,Material wall,Material roof,Material wood)
+    static Transform House(Transform parent,Vector3 s,Material concrete,Material wall,Material roof,Material wood)
     {
         var h=new GameObject("Casa explorável").transform;h.SetParent(parent,false);h.position=s;
         Block(h,"Fundação",s+Vector3.up*.12f,new Vector3(8,.24f,7),concrete);
@@ -275,6 +303,7 @@ internal static class OZIsland
         var hinge=new GameObject("Porta").transform;hinge.SetParent(h,false);hinge.position=s+new Vector3(-1.05f,0,-3.5f);
         var door=Block(hinge,"Madeira",hinge.position+new Vector3(1,1.15f,0),new Vector3(2,2.3f,.12f),wood);
         GameObjectUtility.SetStaticEditorFlags(door.gameObject,0);hinge.gameObject.AddComponent<OZDoor>();
+        return h;
     }
     static void BuildGroundMeshes(Transform parent,Terrain terrain)
     {
@@ -284,7 +313,8 @@ internal static class OZIsland
         var ground=AssetDatabase.LoadAssetAtPath<Material>(groundPath);
         if(!ground){ground=new Material(shader);AssetDatabase.CreateAsset(ground,groundPath);}
         ground.SetTexture("_BaseMap",AssetDatabase.LoadAssetAtPath<Texture2D>("Assets/Content/Raw/grass.jpg"));
-        ground.SetTexture("_SoilMap",AssetDatabase.LoadAssetAtPath<Texture2D>("Assets/Content/Raw/concrete.jpg"));
+        OZContent.ConfigureTexture("Assets/Content/Raw/earth-track.jpg",512);
+        ground.SetTexture("_SoilMap",AssetDatabase.LoadAssetAtPath<Texture2D>("Assets/Content/Raw/earth-track.jpg"));
         ground.SetTexture("_GroundNormal",AssetDatabase.LoadAssetAtPath<Texture2D>("Assets/Content/Raw/grass-normal.jpg"));
         EditorUtility.SetDirty(ground);
         var data=terrain.terrainData;int resolution=data.heightmapResolution;
@@ -427,7 +457,7 @@ internal static class OZIsland
             if(i==steps)continue;
             int t=i*6,j=i*2; tris[t]=j;tris[t+1]=j+1;tris[t+2]=j+2;tris[t+3]=j+1;tris[t+4]=j+3;tris[t+5]=j+2;
         }
-        var mesh=new Mesh {name="Estrada conformada",vertices=v,uv=uv,triangles=tris};mesh.RecalculateNormals();mesh.RecalculateBounds();
+        var mesh=new Mesh {name="Estrada conformada",vertices=v,uv=uv,triangles=tris};mesh.RecalculateNormals();mesh.RecalculateBounds();mesh.RecalculateTangents();
         string path=Generated+FormattableString.Invariant($"IlhaRoad_{a.x}_{a.y}_{b.x}_{b.y}.asset");
         var existing=AssetDatabase.LoadAssetAtPath<Mesh>(path);
         if(existing){EditorUtility.CopySerialized(mesh,existing);UnityEngine.Object.DestroyImmediate(mesh);mesh=existing;EditorUtility.SetDirty(mesh);}
@@ -515,11 +545,16 @@ internal static class OZIsland
         rockMaterial.EnableKeyword("_NORMALMAP");
         rockMaterial.enableInstancing = true;
         EditorUtility.SetDirty(rockMaterial);
-        for (int i = 0; i < 20; i++)
+        for (int i = 0; i < 34; i++)
         {
             float angle = i * 2 * Mathf.PI / 20;
             float radius = 110 + (i % 4) * 145;
             Vector3 point = new Vector3(Mathf.Cos(angle) * radius, 0, Mathf.Sin(angle) * radius);
+            if(i>=20)
+            {
+                float x=-230f+(i-20)*27;
+                point=new Vector3(x,0,221f+77f*Mathf.Sin(x*.0065f)+12f*Mathf.Sin(i));
+            }
             point.y = Height(terrain, point) - .3f;
             var root = new GameObject("Afloramento");
             root.transform.SetParent(parent, false);

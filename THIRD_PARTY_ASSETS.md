@@ -27,3 +27,7 @@ As atribuições desta revisão também acompanham o aplicativo em [Creditos-Ilh
 | [Island Tree 01](https://polyhaven.com/a/island_tree_01) | Rob Tuytel e Rico Cilliers, CC0 | Dois níveis de detalhe, tronco físico e folhagem com recorte alfa. |
 | [Wooden Crate 02](https://polyhaven.com/a/wooden_crate_02) | James Ray Cock e Jurita Burger, CC0 | Cobertura e decoração, conversão para FBX e material compartilhado. |
 | [Game-icons.net](https://github.com/game-icons/icons/tree/82d948812bfe3f269ef8f731dcdb07b08160edc4) | Lorc e Delapouite, CC BY 3.0 | Sete pictogramas rasterizados. A lista individual está nos créditos distribuídos. |
+
+## V0.8 — Operador de campo e solo
+
+O FBX deriva de `WebGame/assets/soldier.glb`. A malha de BAMEN e as capturas 100STYLE foram adaptadas por cktang88 sob CC BY 4.0, com animações complementares de Quaternius sob CC0. A versão de campo inclui dois níveis de detalhe, 16 tomadas e materiais de uniforme do projeto. O piso de terra combina Grass Ground e Coast Rocks 01 da Poly Haven sob CC0. [Autores, fontes e licenças distribuídos com o jogo](Assets/StreamingAssets/Creditos-Ilha-Zero.txt).
