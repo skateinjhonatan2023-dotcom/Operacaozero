@@ -12,6 +12,7 @@ public sealed class OZVehicle:MonoBehaviour {
   speed=Mathf.MoveTowards(speed,target,dt*(Mathf.Abs(target)<.1f?12:7));
   transform.Rotate(0,input.x*95f*dt*Mathf.Clamp01(Mathf.Abs(speed)/3f)*(speed<0?-1:1),0);
   vertical=body.isGrounded?-2:vertical-18*dt;
+  if(OZGame.RecoverGround(body))vertical=0;
   var collision=body.Move((transform.forward*speed+Vector3.up*vertical)*dt);
   if((collision&CollisionFlags.Sides)!=0)speed=0;
  }

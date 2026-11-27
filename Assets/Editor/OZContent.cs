@@ -41,7 +41,7 @@ internal static class OZContent
         importer.SaveAndReimport();
     }
 
-    static void ConfigureTexture(string path, int size, TextureImporterType type = TextureImporterType.Default, bool linear = false)
+    internal static void ConfigureTexture(string path, int size, TextureImporterType type = TextureImporterType.Default, bool linear = false)
     {
         if (AssetImporter.GetAtPath(path) is not TextureImporter importer)
             throw new InvalidOperationException("Textura ausente: " + path);
