@@ -89,7 +89,8 @@ public sealed class OZGame : MonoBehaviour {
 
  public static CharacterController SettleAtSpawn(OZActor actor,Vector3 requested)
  {
-  var ctrl=actor.GetComponent<CharacterController>() ?? actor.gameObject.AddComponent<CharacterController>();
+  if(!actor.TryGetComponent<CharacterController>(out var ctrl))
+   ctrl=actor.gameObject.AddComponent<CharacterController>();
   ctrl.enabled=false;
   actor.transform.SetPositionAndRotation(GroundSpawn(requested),Quaternion.identity);
   ctrl.height=1.8f;ctrl.center=Vector3.up*.9f;ctrl.radius=.33f;
