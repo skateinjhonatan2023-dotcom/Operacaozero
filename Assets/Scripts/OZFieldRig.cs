@@ -7,6 +7,8 @@ public sealed class OZFieldRig : MonoBehaviour
     public AvatarMask upperMask;
     public AnimationClip jog,aimWalk,back,left,right,takeoff,land;
     public RuntimeAnimatorController groundedController;
+    // Sole points calibrated against the boot mesh in the bind pose (toe-local coordinates).
+    public Vector3 leftSole,rightSole;
     public bool airborne,reloading;
     Vector3 rest;
     Quaternion wristOffset;
@@ -17,12 +19,16 @@ public sealed class OZFieldRig : MonoBehaviour
     {
         public Transform hip,knee,ankle,toe;
         public Transform support;
-        public Vector3 anchor;
+        public Vector3 anchor,soleOffset;
         public float weight;
     }
     Leg leftLeg,rightLeg;
-    void Awake()
+    bool bound;
+    void Awake() => BindPose();
+    public void BindPose()
     {
+        if(bound)return;
+        bound=true;
         rest=body.localPosition;
         var animator=body.GetComponentInChildren<Animator>();
         if(!animator || !animator.isHuman)return;
@@ -31,13 +37,14 @@ public sealed class OZFieldRig : MonoBehaviour
                 ankle=animator.GetBoneTransform(foot),toe=toe};
         leftLeg=Bind(HumanBodyBones.LeftUpperLeg,HumanBodyBones.LeftLowerLeg,HumanBodyBones.LeftFoot,leftToe);
         rightLeg=Bind(HumanBodyBones.RightUpperLeg,HumanBodyBones.RightLowerLeg,HumanBodyBones.RightFoot,rightToe);
+        leftLeg.soleOffset=leftSole;rightLeg.soleOffset=rightSole;
     }
 
-    void PlaceFoot(Leg leg,float lowest)
+    void PlaceFoot(Leg leg,float lowest,float dt)
     {
         if(leg==null)return;
         if(airborne){leg.support=null;leg.weight=0;return;}
-        Vector3 sole=leg.toe.position;
+        Vector3 sole=leg.toe.TransformPoint(leg.soleOffset);
         int count=Physics.RaycastNonAlloc(sole+Vector3.up*.27f,Vector3.down,contacts,.55f,~0,QueryTriggerInteraction.Ignore);
         int support=-1;
         for(int i=0;i<count;i++)
@@ -48,8 +55,8 @@ public sealed class OZFieldRig : MonoBehaviour
         if(support<0){leg.support=null;leg.weight=0;return;}
         var hit=contacts[support];
         float phase=1-Mathf.InverseLerp(.025f,.12f,sole.y-lowest);
-        leg.weight=Mathf.MoveTowards(leg.weight,phase,Time.deltaTime*12);
-        Vector3 targetSole=hit.point+.025f*Vector3.up;
+        leg.weight=Mathf.MoveTowards(leg.weight,phase,dt*12);
+        Vector3 targetSole=hit.point+.004f*Vector3.up;
         if(leg.support!=hit.transform || phase<.55f ||
             Vector3.ProjectOnPlane(leg.support.TransformPoint(leg.anchor)-targetSole,Vector3.up).sqrMagnitude>.0144f)
         {
@@ -73,15 +80,17 @@ public sealed class OZFieldRig : MonoBehaviour
         leg.ankle.rotation=Quaternion.Slerp(Quaternion.identity,Quaternion.FromToRotation(Vector3.up,hit.normal),leg.weight*.65f)*footRotation;
     }
 
-    void LateUpdate()
+    void LateUpdate() => EvaluateContacts(Time.deltaTime);
+    public void EvaluateContacts(float dt)
     {
-        float sole=Mathf.Min(leftToe.position.y,rightToe.position.y);
-        float lift=airborne ? 0 : Mathf.Clamp(body.localPosition.y-rest.y+transform.position.y+.025f-sole,-.26f,.28f);
-        body.localPosition=rest+Vector3.up*Mathf.Lerp(body.localPosition.y-rest.y,lift,1-Mathf.Exp(-25*Time.deltaTime));
+        BindPose();
+        float sole=Mathf.Min(leftToe.TransformPoint(leftSole).y,rightToe.TransformPoint(rightSole).y);
+        float lift=airborne ? 0 : Mathf.Clamp(body.localPosition.y-rest.y+transform.position.y+.004f-sole,-.26f,.28f);
+        body.localPosition=rest+Vector3.up*Mathf.Lerp(body.localPosition.y-rest.y,lift,1-Mathf.Exp(-25*dt));
         if(adjustFootContacts)
         {
-            float lowest=Mathf.Min(leftToe.position.y,rightToe.position.y);
-            PlaceFoot(leftLeg,lowest); PlaceFoot(rightLeg,lowest);
+            float lowest=Mathf.Min(leftToe.TransformPoint(leftSole).y,rightToe.TransformPoint(rightSole).y);
+            PlaceFoot(leftLeg,lowest,dt); PlaceFoot(rightLeg,lowest,dt);
         }
         Vector3 palm=Vector3.Lerp(rightHand.position,rightKnuckle.position,.5f);
         Vector3 direction=Vector3.Lerp(leftHand.position,leftKnuckle.position,.43f)-palm;

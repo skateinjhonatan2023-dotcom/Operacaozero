@@ -41,6 +41,7 @@ internal static class OZFieldOperator
             field.grip=new GameObject("WeaponGrip").transform;field.grip.SetParent(root.transform,false);
             var skins=model.GetComponentsInChildren<SkinnedMeshRenderer>();
             var close=skins.Single(r=>r.name=="FieldBody");var far=skins.Single(r=>r.name=="FieldDistant");
+            CalibrateBoots(close,field);
             foreach(var mesh in skins)mesh.sharedMaterials=mesh.sharedMaterials.Select(m=>Surface(m.name)).ToArray();
             var lod=root.AddComponent<LODGroup>();
             lod.SetLODs(new[]{new LOD(.10f,new Renderer[]{close}),new LOD(.003f,new Renderer[]{far})});lod.RecalculateBounds();
@@ -76,6 +77,31 @@ internal static class OZFieldOperator
             return root;
         }
         catch { UnityEngine.Object.DestroyImmediate(root); throw; }
+    }
+
+    static void CalibrateBoots(SkinnedMeshRenderer mesh,OZFieldRig field)
+    {
+        var baked=new Mesh();
+        try
+        {
+            mesh.BakeMesh(baked);
+            var points=baked.vertices;
+            var weights=mesh.sharedMesh.boneWeights;
+            var bones=mesh.bones;
+            Vector3 Pad(Transform toe)
+            {
+                var ankle=toe.parent;
+                var candidates=Enumerable.Range(0,points.Length)
+                    .Where(i=>bones[weights[i].boneIndex0].IsChildOf(ankle))
+                    .Select(i=>mesh.transform.TransformPoint(points[i])).OrderBy(v=>v.y).Take(8).ToArray();
+                if(candidates.Length==0)throw new InvalidOperationException("Sem geometria de bota para "+toe.name);
+                Vector3 center=Vector3.zero;
+                foreach(var v in candidates)center+=v;
+                return toe.InverseTransformPoint(center/candidates.Length);
+            }
+            field.leftSole=Pad(field.leftToe);field.rightSole=Pad(field.rightToe);
+        }
+        finally {UnityEngine.Object.DestroyImmediate(baked);}
     }
 
     static Material Surface(string name)

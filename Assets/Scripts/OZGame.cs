@@ -78,7 +78,26 @@ public sealed class OZGame : MonoBehaviour {
   requested.y=ground+.12f;
   return requested;
  }
- OZActor Spawn(Vector3 pos){pos=GroundSpawn(pos);var a=Instantiate(soldier,pos,Quaternion.identity);a.gameObject.SetActive(true);a.Setup();var ctrl=a.GetComponent<CharacterController>()??a.gameObject.AddComponent<CharacterController>();ctrl.enabled=false;ctrl.height=1.8f;ctrl.center=Vector3.up*.9f;ctrl.radius=.33f;ctrl.skinWidth=.035f;ctrl.stepOffset=.28f;ctrl.minMoveDistance=0;ctrl.enabled=true;return a;}
+ OZActor Spawn(Vector3 pos)
+ {
+  var actor=Instantiate(soldier);
+  actor.gameObject.SetActive(true);
+  SettleAtSpawn(actor,pos);
+  actor.Setup();
+  return actor;
+ }
+
+ public static CharacterController SettleAtSpawn(OZActor actor,Vector3 requested)
+ {
+  var ctrl=actor.GetComponent<CharacterController>() ?? actor.gameObject.AddComponent<CharacterController>();
+  ctrl.enabled=false;
+  actor.transform.SetPositionAndRotation(GroundSpawn(requested),Quaternion.identity);
+  ctrl.height=1.8f;ctrl.center=Vector3.up*.9f;ctrl.radius=.33f;
+  ctrl.skinWidth=.035f;ctrl.stepOffset=.28f;ctrl.minMoveDistance=0;ctrl.enabled=true;
+  Physics.SyncTransforms();
+  ctrl.Move(Vector3.down*.30f);
+  return ctrl;
+ }
  public void Begin(Mode m){if(Playing||finished||!Player)return;mode=m;Playing=true;startTime=Time.time;protectedUntil=startTime+8;ZoneSeconds=MapRadius>200?55:25;nextDrop=startTime+80;int count=Mathf.Min(spawns.Length-1,m==Mode.BattleRoyale?19:4);for(int i=0;i<count;i++){int index=m==Mode.BattleRoyale?1+i*(spawns.Length-1)/count:i+1;Vector3 p=spawns[index].position;if(m!=Mode.BattleRoyale&&Vector3.Distance(p,spawns[0].position)>130){p=spawns[0].position+Quaternion.Euler(0,i*90,0)*Vector3.forward*35;}var a=Spawn(p);a.gameObject.AddComponent<OZBot>().Init(this,a);bots.Add(a);}
  SpawnLoot();
  if (mode==Mode.BattleRoyale) {
