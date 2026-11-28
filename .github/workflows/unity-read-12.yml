@@ -1,0 +1,43 @@
+name: Diagnostico da build Android 12
+on:
+  push:
+    branches: [automation/unity-api-check]
+    paths: ['.github/workflows/unity-read-12.yml']
+permissions: {}
+jobs:
+  logs:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Read existing Unity Editor log
+        env:
+          UNITY_BUILD_API_KEY: ${{ secrets.UNITY_BUILD_API_KEY }}
+        shell: python
+        run: |
+          import os,re,json,urllib.request,urllib.error,urllib.parse,gzip
+          base="https://build-api.cloud.unity3d.com/api/v1/orgs/4674291933911/projects/5240018a-e89a-427b-a7f1-f87352632e31/buildtargets/operacao-zero-v0-6-android/builds/12"
+          key=os.environ["UNITY_BUILD_API_KEY"].strip()
+          class NoRedirect(urllib.request.HTTPRedirectHandler):
+              def redirect_request(self,*args): return None
+          direct=urllib.request.build_opener(NoRedirect())
+          def fetch(path):
+              req=urllib.request.Request(base+path,headers={"Authorization":"Basic "+key})
+              try:
+                  resp=direct.open(req,timeout=30)
+              except urllib.error.HTTPError as e:
+                  if e.code not in (301,302,303,307,308): raise SystemExit("Unity log HTTP "+str(e.code))
+                  url=e.headers["Location"]; resp=None
+              else:
+                  data=resp.read();resp.close()
+                  if resp.status!=202:return data
+                  row=json.loads(data);url=row["redirect_url"]
+              if urllib.parse.urlparse(url).scheme!="https":raise SystemExit("Invalid log link")
+              with urllib.request.urlopen(url,timeout=35) as stream:return stream.read()
+          raw=fetch("/log?redirect=manual")
+          if raw[:2]==b"\x1f\x8b":raw=gzip.decompress(raw)
+          text=raw.decode("utf-8","replace")
+          print("Unity log bytes",len(raw))
+          text=text.replace("\\n","\n")
+          markers=r"OZ09|Cápsula|sola ao piso|Rig Error|Exception:|error CS\d+|Error building|BuildFailed|Falha|PreExport|Failed to|pre.export|ERROR:|##error|boot mesh"
+          selected=[l for l in text.splitlines() if re.search(markers,l,re.I) and not re.search(r"https?://|token|password|credential|api.key",l,re.I)]
+          for l in selected[-40:]:print(l.replace(key,"[redacted]")[:400])
