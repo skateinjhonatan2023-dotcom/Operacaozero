@@ -1,0 +1,186 @@
+name: Unity Cloud Build 12 - V0.9 Contato das botas
+on:
+  push:
+    branches: [automation/unity-api-check]
+    paths: ['.github/workflows/unity-cloud-build12.yml']
+permissions:
+  contents: read
+concurrency:
+  group: unity-cloud-build12
+  cancel-in-progress: false
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 1841495e8c336f95251ad6fec0d5de8bd15c5417
+          persist-credentials: false
+      - name: Confirm revision and asset integrity
+        run: |
+          test "$(git rev-parse HEAD)" = "1841495e8c336f95251ad6fec0d5de8bd15c5417"
+          python3 Tools/preflight.py
+      - name: Parse every Unity C# file
+        run: |
+          python3 -m pip install --quiet tree-sitter tree-sitter-c-sharp
+          python3 - <<'PY'
+          from pathlib import Path
+          from tree_sitter import Language, Parser
+          import tree_sitter_c_sharp
+          parser = Parser(Language(tree_sitter_c_sharp.language()))
+          files = sorted(Path("Assets").rglob("*.cs"))
+          assert files, "No Unity scripts"
+          for path in files:
+              tree = parser.parse(path.read_bytes())
+              if tree.root_node.has_error:
+                  raise SystemExit(f"C# syntax error: {path}")
+              print(f"Syntax OK: {path}")
+          print(f"Parsed {len(files)} Unity C# scripts")
+          PY
+  unity:
+    needs: validate
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - name: Start one clean Unity build and monitor
+        env:
+          UNITY_BUILD_API_KEY: ${{ secrets.UNITY_BUILD_API_KEY }}
+          PYTHONUNBUFFERED: '1'
+        shell: python
+        run: |
+          import os, json, urllib.request, urllib.error, time, re
+          base = "https://build-api.cloud.unity3d.com/api/v1/orgs/4674291933911/projects/5240018a-e89a-427b-a7f1-f87352632e31/buildtargets/operacao-zero-v0-6-android"
+          revision = "1841495e8c336f95251ad6fec0d5de8bd15c5417"
+          key = os.environ["UNITY_BUILD_API_KEY"].strip()
+          if not key:
+              raise SystemExit("Unity API credential is missing")
+          class NoRedirect(urllib.request.HTTPRedirectHandler):
+              def redirect_request(self, req, fp, code, msg, headers, newurl):
+                  return None
+          opener = urllib.request.build_opener(NoRedirect())
+          def request(path, body=None, method=None, missing_ok=False, org=False):
+              headers = {"Authorization":"Basic "+key,"Accept":"application/json"}
+              if body is not None:
+                  headers["Content-Type"] = "application/json"
+              req = urllib.request.Request((base.split("/projects/")[0] if org else base)+path, data=json.dumps(body).encode() if body is not None else None, headers=headers, method=method)
+              try:
+                  with opener.open(req, timeout=35) as response:
+                      return json.load(response)
+              except urllib.error.HTTPError as e:
+                  if missing_ok and e.code == 404:
+                      return None
+                  raise SystemExit("Unity API HTTP "+str(e.code)+" on "+str(method or "GET"))
+          def status(d):
+              fields = ("build","buildStatus","requestedRevision","lastBuiltRevision","unityVersion","scmBranch","finished")
+              print(json.dumps({k:d.get(k) for k in fields},ensure_ascii=True))
+          target = request("")
+          settings = target.get("settings", {})
+          hook = ((settings.get("advanced") or {}).get("unity") or {}).get("preExportMethod")
+          print("Pre-export hook configured:",hook=="OZBuild.CloudPrepare")
+          if hook != "OZBuild.CloudPrepare":
+              raise SystemExit("Required Unity scene preparation hook not configured")
+          previous = request("/builds/11")
+          if previous.get("buildStatus") != "success":
+              raise SystemExit("Build 11 not confirmed successful; no new build")
+          existing = request("/builds/12",missing_ok=True)
+          if existing is None:
+              import math, datetime
+              plan = request("/billingplan", org=True)
+              label = str((plan.get("billing") or {}).get("label") or plan.get("billingPlan") or "")
+              print("Organization plan:", label)
+              # Free tier stops at its quota. For another tier reserve a full build window
+              # inside the included Windows allowance, counting usage across the organization.
+              if "free" not in label.lower():
+                  rows = request("/builds?per_page=100&showDeleted=true", org=True)
+                  if not isinstance(rows, list) or len(rows) >= 100:
+                      raise SystemExit("Incomplete organization usage; no build started")
+                  month = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m")
+                  minutes = 0
+                  for row in rows:
+                      if str(row.get("created","")).startswith(month):
+                          if not row.get("finished"):
+                              raise SystemExit("Other build active; cannot reserve included minutes")
+                          seconds = row.get("billableTimeInSeconds")
+                          if seconds is None:
+                              seconds = row.get("totalTimeInSeconds")
+                          if seconds is None:
+                              raise SystemExit("Missing usage record; no build started")
+                          minutes += math.ceil(float(seconds)/60)
+                  print("Conservative monthly usage:", minutes, "minutes")
+                  if minutes + 45 > 200:
+                      raise SystemExit("Insufficient included minutes; no build started")
+              payload = {"clean":True,"machineTypeLabel":"win11_micro_v1","branch":"codex/v09-operador","commit":revision}
+              print("Requesting clean build for",revision)
+              result = request("/builds",payload,"POST")
+              entries = result if isinstance(result,list) else [result]
+              if len(entries)!=1 or not isinstance(entries[0],dict):
+                  raise SystemExit("Unexpected start response; inspect status before retrying")
+              d = entries[0]
+              status(d)
+              number = d.get("build")
+              if number != 12:
+                  raise SystemExit("Unexpected build number; no further build will be started")
+          else:
+              number = 12
+              d = existing
+              if d.get("requestedRevision") != revision:
+                  raise SystemExit("Existing build 12 belongs to a different revision; do not start another automatically")
+              print("Build 12 already exists; no duplicate requested")
+              status(d)
+          for attempt in range(66):
+              d = request("/builds/"+str(number))
+              status(d)
+              actual = d.get("requestedRevision")
+              built = d.get("lastBuiltRevision")
+              if actual and actual != revision:
+                  raise SystemExit("Requested revision mismatch; no further build will be started")
+              if built and built != revision:
+                  raise SystemExit("Checked out revision mismatch; no further build will be started")
+              state = str(d.get("buildStatus","")).lower()
+              if state in ("success","failure","failed","canceled","cancelled","error"):
+                  print("Terminal Unity status:",state)
+                  print("Expected revision checked out:",built==revision)
+                  if state != "success" or built != revision:
+                      report = d.get("buildReport") or {}
+                      print("Build report error count:", report.get("errors"))
+                      for item in d.get("failureDetails") or []:
+                          print("Failure category:",str(item.get("displayName",""))[:150])
+                      try:
+                          req = urllib.request.Request(base+"/builds/"+str(number)+"/log?compact=true&redirect=none",headers={"Authorization":"Basic "+key})
+                          with opener.open(req,timeout=30) as response:
+                              log=response.read(3000000).decode("utf-8","replace")
+                          for error in re.findall(r"(?:Assets/[a-zA-Z0-9_ ./()+,-]+\.cs(?:\([0-9, ]+\))?[^\r\n<>]{0,20})?error CS\d{4}:[^\n\r<>]{1,200}",log)[:12]:
+                              print(error.replace(key,"[redacted]"))
+                          for match in re.findall(r"(?:OZ09:|OZ_BUILD: operador de campo indisponível|Rig Error:|Avatar Rig Configuration|Avatar creation failed|InvalidOperationException:|KeyNotFoundException:)[^<>\n\r]{0,280}",log)[:25]:
+                              print(match.replace(key,"[redacted]"))
+                      except Exception as e:
+                          print("Compiler diagnostics unavailable:",type(e).__name__)
+                      raise SystemExit("Unity build not successful")
+                  from pathlib import Path
+                  from urllib.parse import urlparse
+                  import shutil, zipfile
+                  link = (d.get("links", {}).get("download_primary") or {}).get("href","")
+                  if urlparse(link).scheme != "https":
+                      raise SystemExit("Build succeeded; no signed HTTPS APK URL available")
+                  try:
+                      with urllib.request.urlopen(link,timeout=110) as result, open("OperationZero-V0.9.apk","wb") as output:
+                          shutil.copyfileobj(result,output)
+                  except Exception as e:
+                      raise SystemExit("APK download failed: "+type(e).__name__)
+                  with zipfile.ZipFile("OperationZero-V0.9.apk") as apk:
+                      entries = {"AndroidManifest.xml","classes.dex","lib/arm64-v8a/libunity.so","lib/arm64-v8a/libil2cpp.so"}
+                      if not all(n in apk.namelist() and apk.getinfo(n).file_size for n in entries) or apk.testzip():
+                          raise SystemExit("APK failed ARM64 IL2CPP archive validation")
+                  print("APK ARM64 IL2CPP verified")
+                  break
+              time.sleep(30)
+          else:
+              request("/builds/"+str(number),method="DELETE")
+              raise SystemExit("Test build exceeded its reserved time and was stopped")
+      - uses: actions/upload-artifact@v4
+        with:
+          name: OperationZero-V0.9-Android
+          path: OperationZero-V0.9.apk
+          retention-days: 7
+          if-no-files-found: error
