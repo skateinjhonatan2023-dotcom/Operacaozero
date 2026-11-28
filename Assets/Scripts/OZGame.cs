@@ -60,7 +60,7 @@ public sealed class OZGame : MonoBehaviour {
  public int Weapon { get; private set; } public int Ammo=>ammo[Weapon]; public int Reserve=>reserve[Weapon]; public string WeaponName=>names[Weapon]; public int XP=>PlayerPrefs.GetInt("OZ_XP",0);
  readonly string[] names={"Rifle","SMG","Sniper","Pistola","Escopeta"};readonly int[] capacity={30,24,5,12,6},damage={34,24,95,30,60};readonly float[] rate={.13f,.08f,.85f,.24f,.72f},reach={100,65,220,45,28}; readonly int[] ammo={30,24,5,12,6},reserve={120,144,25,72,30};
  float yaw,pitch=8,vy,nextShot,reloadUntil,slideUntil,startTime; int reloadWeapon; CharacterController cc; AudioSource audioSource; bool finished;
- void Start(){if(!view)view=Camera.main;SetFrameRate(PlayerPrefs.GetInt("OZ_FPS",30));SetQuality(PlayerPrefs.GetInt("OZ_QUALITY",0));Sensitivity=PlayerPrefs.GetFloat("OZ_SENS",1);AdsSensitivity=Mathf.Clamp(PlayerPrefs.GetFloat("OZ_ADS_SENS",.65f),.2f,3f);audioSource=gameObject.AddComponent<AudioSource>();shotEffects=gameObject.AddComponent<OZShotEffects>();shotEffects.Initialize(effectsMaterial);if(!soldier||!rifle||!shotSound||!view||spawns==null||spawns.Length<8){Result="Conteúdo gráfico obrigatório ausente";enabled=false;return;} var terrain=Terrain.activeTerrain;if(terrain)MapRadius=Mathf.Min(terrain.terrainData.size.x,terrain.terrainData.size.z)*.5f;Zone=MapRadius*.9f;doors=FindObjectsByType<OZDoor>(FindObjectsSortMode.None);vehicles=FindObjectsByType<OZVehicle>(FindObjectsSortMode.None);CameraFov=Mathf.Clamp(PlayerPrefs.GetFloat("OZ_FOV",65),55,85);CameraSmooth=Mathf.Clamp(PlayerPrefs.GetFloat("OZ_CAM_SMOOTH",18),6,30);Gyro=SystemInfo.supportsGyroscope&&PlayerPrefs.GetInt("OZ_GYRO",0)==1;if(Gyro)Input.gyro.enabled=true;BotDifficulty=Mathf.Clamp(PlayerPrefs.GetInt("OZ_BOT_DIFFICULTY",1),0,2);AutoSprint=PlayerPrefs.GetInt("OZ_AUTO_SPRINT",0)==1;Player=Spawn(spawns[0].position);cc=Player.GetComponent<CharacterController>();playerBody=Player.GetComponentsInChildren<SkinnedMeshRenderer>(true);bodyShadowModes=new UnityEngine.Rendering.ShadowCastingMode[playerBody.Length];for(int i=0;i<playerBody.Length;i++)bodyShadowModes[i]=playerBody[i].shadowCastingMode;Player.Pose(0,false);UpdateCamera(true);}
+ void Start(){if(!view)view=Camera.main;SetFrameRate(PlayerPrefs.GetInt("OZ_FPS",30));SetQuality(PlayerPrefs.GetInt("OZ_QUALITY",0));Sensitivity=PlayerPrefs.GetFloat("OZ_SENS",1);AdsSensitivity=Mathf.Clamp(PlayerPrefs.GetFloat("OZ_ADS_SENS",.65f),.2f,3f);audioSource=gameObject.AddComponent<AudioSource>();shotEffects=gameObject.AddComponent<OZShotEffects>();shotEffects.Initialize(effectsMaterial);if(!soldier||!rifle||!shotSound||!view||spawns==null||spawns.Length<8){Result="Conteúdo gráfico obrigatório ausente";enabled=false;return;} var terrain=Terrain.activeTerrain;if(terrain)MapRadius=Mathf.Min(terrain.terrainData.size.x,terrain.terrainData.size.z)*.5f;Zone=MapRadius*.9f;doors=FindObjectsByType<OZDoor>(FindObjectsSortMode.None);vehicles=FindObjectsByType<OZVehicle>(FindObjectsSortMode.None);CameraFov=Mathf.Clamp(PlayerPrefs.GetFloat("OZ_FOV",65),55,85);CameraSmooth=Mathf.Clamp(PlayerPrefs.GetFloat("OZ_CAM_SMOOTH",18),6,30);Gyro=SystemInfo.supportsGyroscope&&PlayerPrefs.GetInt("OZ_GYRO",0)==1;if(Gyro)Input.gyro.enabled=true;BotDifficulty=Mathf.Clamp(PlayerPrefs.GetInt("OZ_BOT_DIFFICULTY",1),0,2);AutoSprint=PlayerPrefs.GetInt("OZ_AUTO_SPRINT",0)==1;Player=Spawn(spawns[0].position);if(Player.TryGetComponent<OZFieldRig>(out var fieldRig))fieldRig.adjustFootContacts=true;cc=Player.GetComponent<CharacterController>();playerBody=Player.GetComponentsInChildren<SkinnedMeshRenderer>(true);bodyShadowModes=new UnityEngine.Rendering.ShadowCastingMode[playerBody.Length];for(int i=0;i<playerBody.Length;i++)bodyShadowModes[i]=playerBody[i].shadowCastingMode;Player.Pose(0,false);UpdateCamera(true);}
  public static bool GroundHeight(Vector3 p,out float y){var t=Terrain.activeTerrain;y=0;if(!t)return false;var o=t.transform.position;var s=t.terrainData.size;float u=(p.x-o.x)/s.x,v=(p.z-o.z)/s.z;if(u<0||u>1||v<0||v>1)return false;y=o.y+t.terrainData.GetInterpolatedHeight(u,v);return true;}
  public static bool RecoverGround(CharacterController c){if(!c||!c.enabled||!GroundHeight(c.transform.position,out float y)||c.transform.position.y>=y-.18f)return false;var p=c.transform.position;c.enabled=false;p.y=y+.08f;c.transform.position=p;c.enabled=true;return true;}
  static Vector3 GroundSpawn(Vector3 requested)
@@ -128,7 +128,8 @@ public sealed class OZGame : MonoBehaviour {
  }
 
  Vector3 planarVelocity;
- float jumpBufferedUntil=-1, lastGrounded=-1;
+ readonly OZGroundMotion groundMotion=new OZGroundMotion();
+ float cameraGroundY;
  float boom, aimBlend, shoulderBlend, pivotHeight;
  const float StandHeight=1.8f,CrouchHeight=1.18f;
  void MovePlayer(float dt) {
@@ -160,26 +161,23 @@ public sealed class OZGame : MonoBehaviour {
   bool strafe=FPS || Aim || Trigger;
   float speed=Deploying ? 8f : low ? 1.25f : Aim ? 1.7f : sprint ? 4.35f : 2.65f;
   if(strafe && (Mathf.Abs(input.x)>.65f || input.y<-.25f) && !Deploying) speed=Mathf.Min(speed,1.65f);
-  bool grounded=cc.isGrounded && !Deploying;
-  if(grounded && vy<=0)lastGrounded=Time.time;
-  if(Jump || Input.GetKeyDown(KeyCode.Space))jumpBufferedUntil=Time.time+.1f;
+  bool surfaceFound=groundMotion.Surface(cc,out var surface);
+  bool grounded=!Deploying && vy<=0 && (cc.isGrounded || (Player.HasFloor && surfaceFound && surface.distance<=.23f));
+  bool jump=Jump || Input.GetKeyDown(KeyCode.Space);
   Jump=false;
   Vector3 requested=desired*speed;
-  float response=grounded ? (input.sqrMagnitude<.001f ? 17f : 11f) : 5f;
   planarVelocity=sliding ? slideDirection*Mathf.Lerp(2.1f,6.6f,(slideUntil-Time.time)/.55f)
-                         : Vector3.MoveTowards(planarVelocity,requested,response*dt);
+                         : OZGroundMotion.Accelerate(planarVelocity,requested,grounded,dt);
   Vector3 facing=strafe ? heading*Vector3.forward : planarVelocity;
   if(facing.sqrMagnitude>.03f)
    Player.transform.rotation=Quaternion.RotateTowards(Player.transform.rotation,Quaternion.LookRotation(facing),dt*(strafe ? 720 : 500));
   Vector3 surfaceVelocity=planarVelocity;
-  if(grounded && Player.HasFloor)
-   surfaceVelocity=Vector3.ProjectOnPlane(planarVelocity,Player.FloorNormal).normalized*planarVelocity.magnitude;
-  if(Deploying)vy=-5;
-  else if(!low && jumpBufferedUntil>=Time.time && Time.time-lastGrounded<.09f)
-  {
-   vy=5.15f;jumpBufferedUntil=-1;lastGrounded=-1;
-  }
-  else vy=grounded && vy<=0 ? -2.4f : Mathf.Max(-36f,vy-19.6f*dt);
+  if(grounded && surfaceFound)
+   surfaceVelocity=Vector3.ProjectOnPlane(planarVelocity,surface.normal).normalized*planarVelocity.magnitude;
+  vy=Deploying ? -5f : groundMotion.Vertical(vy,grounded,low,jump,Time.time,dt);
+  // Maintain support across short descending steps without pulling a real jump back down.
+  if(grounded && surfaceFound && vy<0 && surface.distance>.14f)
+   surfaceVelocity.y-=Mathf.Min(.09f,surface.distance-.14f)/Mathf.Max(.001f,dt);
   var collision=cc.Move((surfaceVelocity+Vector3.up*vy)*dt);
   if (sliding && (collision&CollisionFlags.Sides)!=0) slideUntil=0;
   if (vy>0 && (collision&CollisionFlags.Above)!=0) vy=0;
@@ -191,7 +189,7 @@ public sealed class OZGame : MonoBehaviour {
   Vector3 travelled=Vector3.ProjectOnPlane(cc.velocity,Vector3.up);
   if((collision&CollisionFlags.Sides)!=0)planarVelocity=Vector3.ClampMagnitude(planarVelocity,travelled.magnitude);
   Vector3 local=Player.transform.InverseTransformDirection(travelled.normalized);
-  Player.Pose(travelled.magnitude,Aim,low,Deploying||!cc.isGrounded,reloadUntil>0,new Vector2(local.x,local.z));
+  Player.Pose(travelled.magnitude,Aim,low,Deploying||!cc.isGrounded,reloadUntil>0,new Vector2(local.x,local.z),vy);
  }
 
  bool CanStand() {
@@ -258,7 +256,7 @@ public sealed class OZGame : MonoBehaviour {
   if(InteractRequested||Input.GetKeyDown(KeyCode.F)){if(!Deploying&&nearbyVehicle)EnterVehicle(nearbyVehicle);else if(nearbyDoor)nearbyDoor.Toggle();}
   InteractRequested=false;
  }
- void EnterVehicle(OZVehicle car){planarVelocity=Vector3.zero;vy=0;jumpBufferedUntil=lastGrounded=-1;driving=car;cc.enabled=false;car.BeginDrive();FPS=false;Aim=false;Player.transform.position=car.Seat;Player.transform.rotation=car.transform.rotation;SetFirstPersonBody(true);}
+ void EnterVehicle(OZVehicle car){planarVelocity=Vector3.zero;vy=0;groundMotion.Reset();driving=car;cc.enabled=false;car.BeginDrive();FPS=false;Aim=false;Player.transform.position=car.Seat;Player.transform.rotation=car.transform.rotation;SetFirstPersonBody(true);}
  void Drive(float dt){Vector2 input=Vector2.ClampMagnitude(Move+new Vector2(Input.GetAxisRaw("Horizontal"),Input.GetAxisRaw("Vertical")),1);driving.Tick(input,dt);Player.transform.position=driving.Seat;Player.transform.rotation=driving.transform.rotation;yaw=driving.transform.eulerAngles.y;Look=Vector2.zero;Player.Pose(0,false);}
  void ExitVehicle(){
   if(!driving)return;
@@ -300,7 +298,11 @@ public sealed class OZGame : MonoBehaviour {
   aimBlend=Mathf.Lerp(aimBlend,Aim?1:0,blend);
   shoulderBlend=Mathf.Lerp(shoulderBlend,LeftShoulder?-1:1,blend);
   pivotHeight=Mathf.Lerp(pivotHeight,Driving ? 1.65f : cc.height*.88f,blend);
-  Vector3 pivot=Player.transform.position+Vector3.up*pivotHeight;
+  float feetY=Player.transform.position.y;
+  if(instant || FPS || Driving || !cc.isGrounded || Mathf.Abs(cameraGroundY-feetY)>.38f)
+   cameraGroundY=feetY;
+  else cameraGroundY=Mathf.Lerp(cameraGroundY,feetY,1-Mathf.Exp(-14*Time.deltaTime));
+  Vector3 pivot=Player.transform.position+Vector3.up*(pivotHeight+cameraGroundY-feetY);
   Quaternion q=Quaternion.Euler(pitch,yaw,0);
   float distance=Mathf.Lerp(3.3f,1.72f,aimBlend);
   Vector3 offset=Driving ? q*new Vector3(0,1.65f,-6.3f) : FPS ? Vector3.zero :

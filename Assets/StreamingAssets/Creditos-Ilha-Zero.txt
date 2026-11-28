@@ -28,3 +28,5 @@ Animações complementares de Quaternius, CC0. https://quaternius.com
 Piso de terra derivado de Grass Ground e Coast Rocks 01 da Poly Haven, CC0.
 https://polyhaven.com/a/grass_ground
 https://polyhaven.com/a/coast_rocks_01
+
+V0.9 — Fabric Pattern 07, de Rob Tuytel (Poly Haven, CC0). Cor, normal e rugosidade do tecido foram reamostradas e combinadas com a camuflagem original no uniforme de campo. https://polyhaven.com/a/fabric_pattern_07 — https://polyhaven.com/license

@@ -176,6 +176,8 @@ public static class OZBuild
         if (!mesh.Any(r => r.sharedMesh && r.sharedMesh.vertexCount > 0 && r.bones.Length > 0) ||
             !game.rifle.GetComponentsInChildren<MeshFilter>(true).Any(f => f.sharedMesh && f.sharedMesh.vertexCount > 0))
             throw new InvalidOperationException("Operador ou arma sem geometria importada.");
+        OZFieldChecks.Validate(game.soldier);
+        OZFieldCapture.TryCapture(game);
         var stage = lobby.stage;
         if (!stage.operatorRoot || !stage.cameraView || !stage.rifle ||
             !stage.animator.avatar || !stage.animator.avatar.isValid || stage.idle.legacy || stage.idle.length <= 0 ||
@@ -195,8 +197,8 @@ public static class OZBuild
         Prepare();
         ValidateSavedScene();
         PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.Android, "com.operationzero.game");
-        PlayerSettings.bundleVersion = "0.8";
-        PlayerSettings.Android.bundleVersionCode = 9;
+        PlayerSettings.bundleVersion = "0.9";
+        PlayerSettings.Android.bundleVersionCode = 10;
         PlayerSettings.Android.minSdkVersion = AndroidSdkVersions.AndroidApiLevel26;
         PlayerSettings.Android.targetArchitectures = AndroidArchitecture.ARM64;
         PlayerSettings.SetScriptingBackend(NamedBuildTarget.Android, ScriptingImplementation.IL2CPP);

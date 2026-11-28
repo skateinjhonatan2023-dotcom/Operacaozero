@@ -17,7 +17,10 @@ public sealed class OZActor : MonoBehaviour {
  }
  Transform visualRoot,leftFoot,rightFoot;
  Vector3 baseVisual;
- bool alignFeet,groundedPose;
+ bool alignFeet,groundedPose,wasAir;
+ float landingUntil,airTime;
+ AnimatorControllerPlayable groundTree;
+ static readonly int Lateral=Animator.StringToHash("Lateral"),Forward=Animator.StringToHash("Forward");
  float visualOffset;
  OZFieldRig field;
  PlayableGraph graph;
@@ -40,7 +43,7 @@ public sealed class OZActor : MonoBehaviour {
    alignFeet=leftFoot && rightFoot;
   }
   clips=new[]{idle,walk,run,aim,fire,death,crouch,crouchWalk,airborne,reload,hit,
-   field?field.jog:null,field?field.aimWalk:null,field?field.back:null,field?field.left:null,field?field.right:null};
+   field?field.jog:null,field?field.aimWalk:null,field?field.back:null,field?field.left:null,field?field.right:null,field?field.takeoff:null,field?field.land:null};
   target=new float[clips.Length];target[0]=1;
   graph=PlayableGraph.Create(name);
   mix=AnimationMixerPlayable.Create(graph,clips.Length);
@@ -51,7 +54,16 @@ public sealed class OZActor : MonoBehaviour {
    motion.SetApplyFootIK(animator.isHuman && (clip==walk || clip==run || clip==crouchWalk));
    graph.Connect(motion,0,mixer,index);
   }
-  for(int i=0;i<clips.Length;i++)Connect(mix,i,clips[i]);
+  for(int i=0;i<clips.Length;i++)
+  {
+   if(field && field.groundedController && (i==0 || i==1 || i==2 || i==11 || i>=13 && i<=15))continue;
+   Connect(mix,i,clips[i]);
+  }
+  if(field && field.groundedController)
+  {
+   groundTree=AnimatorControllerPlayable.Create(graph,field.groundedController);
+   graph.Connect(groundTree,0,mix,0);
+  }
   mix.SetInputWeight(0,1);
   var output=AnimationPlayableOutput.Create(graph,"Corpo",animator);
   if(field && field.upperMask)
@@ -66,7 +78,7 @@ public sealed class OZActor : MonoBehaviour {
   else output.SetSourcePlayable(mix);
   graph.Play();
  }
- public void Pose(float speed,bool aiming,bool low=false,bool inAir=false,bool reloading=false,Vector2 direction=default)
+ public void Pose(float speed,bool aiming,bool low=false,bool inAir=false,bool reloading=false,Vector2 direction=default,float verticalSpeed=0)
  {
   if(!graph.IsValid())return;
   groundedPose=!inAir && !Dead;
@@ -76,30 +88,32 @@ public sealed class OZActor : MonoBehaviour {
   upperWeight=overlay && !Dead && Time.time>=hitUntil && (aiming || shooting || reloading) ? 1 : 0;
   int action=reloading ? 2 : shooting ? 1 : 0;
   if(overlay && action!=upperState){upperState=action;upper.GetInput(action).SetTime(0);}
+  if(inAir)airTime+=Time.deltaTime;
+  else if(wasAir)
+  {
+   if(airTime>.13f && field && field.land)landingUntil=Time.time+Mathf.Min(.22f,field.land.length);
+   airTime=0;
+  }
+  wasAir=inAir;
   int next=Dead ? 5 : Time.time<hitUntil && hit ? 10 : !overlay && reloading && reload ? 9 :
-   !overlay && shooting ? 4 : inAir && airborne ? 8 : low && speed>.12f && crouchWalk ? 7 :
-   low && crouch ? 6 : speed<.12f ? (aiming && !overlay ? 3 : 0) :
-   field && direction.y<-.65f ? 13 : field && Mathf.Abs(direction.x)>.70f ? (direction.x<0 ? 14 : 15) :
-   field && aiming ? 12 : field ? 1 : speed>3.1f ? 2 : 1;
+   !overlay && shooting ? 4 : inAir && field && verticalSpeed>.45f && field.takeoff ? 16 :
+   inAir && airborne ? 8 : field && Time.time<landingUntil ? 17 :
+   low && speed>.12f && crouchWalk ? 7 : low && crouch ? 6 :
+   groundTree.IsValid() ? 0 : speed<.12f ? (aiming && !overlay ? 3 : 0) : speed>3.1f ? 2 : 1;
   if(!clips[next])next=0;
   System.Array.Clear(target,0,target.Length);
   target[next]=1;
-  if(field && next==1)
+  if(groundTree.IsValid())
   {
-   float jog=Mathf.InverseLerp(1.3f,2.45f,speed), sprint=Mathf.InverseLerp(2.6f,3.8f,speed);
-   target[1]=1-jog;target[11]=jog*(1-sprint);target[2]=sprint;
+   Vector2 travel=direction.sqrMagnitude>.01f ? direction.normalized*speed : Vector2.up*speed;
+   groundTree.SetFloat(Lateral,travel.x);
+   groundTree.SetFloat(Forward,travel.y);
+   groundTree.SetSpeed(Mathf.Max(1,travel.y/3.15f));
+   if(next==16 || next==17)mix.GetInput(next).SetSpeed(Mathf.Clamp(clips[next].length/.22f,.6f,3f));
+   if(next==7)mix.GetInput(7).SetSpeed(Mathf.Clamp(speed/1.02f,.35f,1.65f));
   }
-  if(state!=next && next!=1 && next!=2 && next!=7 && next<11)mix.GetInput(next).SetTime(0);
+  if(state!=next && next!=0 && mix.GetInput(next).IsValid())mix.GetInput(next).SetTime(0);
   state=next;
-  if(field)
-  {
-   for(int i=0;i<clips.Length;i++)
-   {
-    if(target[i]<=0)continue;
-    float stride=i switch {1=>1.29f,2=>3.15f,7=>1.02f,11=>2.28f,12=>1.29f,13=>.8f,14=>.79f,15=>.73f,_=>0};
-    if(stride>0)mix.GetInput(i).SetSpeed(Mathf.Clamp(speed/stride,.28f,2.1f));
-   }
-  }
  }
  public void Fire() {
   fireUntil=Time.time+.22f;
@@ -132,11 +146,11 @@ public sealed class OZActor : MonoBehaviour {
   float blend=1-Mathf.Exp(-Time.deltaTime*19);
   for(int i=0;i<clips.Length;i++)
   {
-   if(!clips[i])continue;
+   if(!clips[i] || !mix.GetInput(i).IsValid())continue;
    mix.SetInputWeight(i,Mathf.Lerp(mix.GetInputWeight(i),target[i],blend));
    var motion=mix.GetInput(i);
-   if(motion.GetTime()<clips[i].length)continue;
-   bool once=i==4 || i==5 || i==9 || i==10;
+   if((i==0 && groundTree.IsValid()) || motion.GetTime()<clips[i].length)continue;
+   bool once=i==4 || i==5 || i==9 || i==10 || i==16 || i==17;
    motion.SetTime(once ? clips[i].length-.001 : motion.GetTime()%clips[i].length);
   }
   if(upper.IsValid())

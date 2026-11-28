@@ -421,26 +421,26 @@
     "license": "CC-BY-3.0"
   },
   "Assets/Content/FieldOperator/FieldColor.png": {
-    "bytes": 45021,
-    "sha256": "02bd6b9c22cd99fbab66bd9e47b3207e68046d653fcaf99a22daf7eef494cdac",
-    "source": "Assets/Content/Lobby/Weave.png; Assets/Content/Lobby/Weave-Normal.png",
-    "license": "Produzido para Operação Zero"
+    "bytes": 256450,
+    "sha256": "500fa3d6e68520eac4707a818bb0f6a40f16847dfd3c2866cd529d6a6d3689f2",
+    "source": "https://polyhaven.com/a/fabric_pattern_07; Assets/Content/Lobby/Weave.png",
+    "license": "CC0-1.0; acabamento original de Operação Zero"
   },
   "Assets/Content/FieldOperator/FieldMask.png": {
-    "bytes": 2246,
-    "sha256": "1f9f65def8615971153d7cca9d395754f425cbad8c27b932a9f816f34409d2d9",
-    "source": "Assets/Content/Lobby/Weave.png; Assets/Content/Lobby/Weave-Normal.png",
-    "license": "Produzido para Operação Zero"
+    "bytes": 127949,
+    "sha256": "e12bdb5c7f63f4b7e56646f5138a1e14ad58c5656965143dc6ad445766ffdb1f",
+    "source": "https://polyhaven.com/a/fabric_pattern_07; Assets/Content/Lobby/Weave.png",
+    "license": "CC0-1.0; acabamento original de Operação Zero"
   },
   "Assets/Content/FieldOperator/FieldNormal.png": {
-    "bytes": 5812,
-    "sha256": "db89a98f4421323209bbeb8683fd2d78095594ce8c38fb4ba97c3a70cc5cc2e9",
-    "source": "Assets/Content/Lobby/Weave.png; Assets/Content/Lobby/Weave-Normal.png",
-    "license": "Produzido para Operação Zero"
+    "bytes": 276206,
+    "sha256": "9e1191e5196e5ee5f2d2e9e1d87b14824393b15282d2a09c99099660b8deaaa5",
+    "source": "https://polyhaven.com/a/fabric_pattern_07; Assets/Content/Lobby/Weave.png",
+    "license": "CC0-1.0; acabamento original de Operação Zero"
   },
   "Assets/Content/FieldOperator/FieldOperator.fbx": {
-    "bytes": 7634076,
-    "sha256": "d3936409247f9e031323040e1675de0500b1204d288d7af7003c104efa9fc106",
+    "bytes": 8448028,
+    "sha256": "239f46ce8d94381351a352e10aa927ba9a496d6dbb83f63fd287b14963a9297f",
     "source": "WebGame/assets/soldier.glb; WebGame/CREDITOS.txt",
     "license": "CC-BY-4.0 and CC0-1.0"
   },

@@ -31,3 +31,5 @@ As atribuições desta revisão também acompanham o aplicativo em [Creditos-Ilh
 ## V0.8 — Operador de campo e solo
 
 O FBX deriva de `WebGame/assets/soldier.glb`. A malha de BAMEN e as capturas 100STYLE foram adaptadas por cktang88 sob CC BY 4.0, com animações complementares de Quaternius sob CC0. A versão de campo inclui dois níveis de detalhe, 16 tomadas e materiais de uniforme do projeto. O piso de terra combina Grass Ground e Coast Rocks 01 da Poly Haven sob CC0. [Autores, fontes e licenças distribuídos com o jogo](Assets/StreamingAssets/Creditos-Ilha-Zero.txt).
+
+V0.9 — Fabric Pattern 07, de Rob Tuytel (Poly Haven, CC0). Cor, normal e rugosidade do tecido foram reamostradas e combinadas com a camuflagem original no uniforme de campo. https://polyhaven.com/a/fabric_pattern_07 — https://polyhaven.com/license

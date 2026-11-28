@@ -11,15 +11,7 @@ internal static class OZFieldOperator
     {
         var importer=AssetImporter.GetAtPath(File) as ModelImporter;
         if(!importer) throw new InvalidOperationException("FBX do operador de campo ausente.");
-        if(importer.animationType!=ModelImporterAnimationType.Generic || !importer.importAnimation ||
-            importer.avatarSetup!=ModelImporterAvatarSetup.CreateFromThisModel || importer.optimizeGameObjects)
-        {
-            importer.animationType=ModelImporterAnimationType.Generic;
-            importer.avatarSetup=ModelImporterAvatarSetup.CreateFromThisModel;
-            importer.importAnimation=true;
-            importer.optimizeGameObjects=false;
-            importer.SaveAndReimport();
-        }
+        OZFieldAnimation.Import(importer,File);
         var source=AssetDatabase.LoadAssetAtPath<GameObject>(File);
         var clips=AssetDatabase.LoadAllAssetsAtPath(File).OfType<AnimationClip>().Where(c=>!c.name.StartsWith("__preview__"))
             .ToDictionary(c=>c.name.Split('|').Last());
@@ -30,7 +22,8 @@ internal static class OZFieldOperator
         {
             var model=(GameObject)PrefabUtility.InstantiatePrefab(source,root.transform);
             var animator=model.GetComponentInChildren<Animator>();
-            if(!animator)throw new InvalidOperationException("Animator do operador ausente.");
+            if(!animator || !animator.avatar || !animator.avatar.isHuman || !animator.avatar.isValid)
+                throw new InvalidOperationException("Avatar Humanoid de campo inválido.");
             animator.applyRootMotion=false;
             var field=root.AddComponent<OZFieldRig>();
             var bones=model.GetComponentsInChildren<Transform>(true);
@@ -67,10 +60,19 @@ internal static class OZFieldOperator
                 mask.SetTransformActive(i,hierarchy[i].IsChildOf(field.spine));
             }
             EditorUtility.SetDirty(mask);
+            for(int part=0;part<(int)AvatarMaskBodyPart.LastBodyPart;part++)
+            {
+                var id=(AvatarMaskBodyPart)part;
+                mask.SetHumanoidBodyPartActive(id,id==AvatarMaskBodyPart.Body || id==AvatarMaskBodyPart.Head ||
+                    id==AvatarMaskBodyPart.LeftArm || id==AvatarMaskBodyPart.RightArm ||
+                    id==AvatarMaskBodyPart.LeftFingers || id==AvatarMaskBodyPart.RightFingers);
+            }
             field.upperMask=mask;
             field.jog=Clip("ready_run");field.aimWalk=Clip("aim_walk");field.back=Clip("mocap_walk_B@0.7285");
             field.left=Clip("mocap_walk_L@0.7455");field.right=Clip("mocap_walk_R@0.7148");
-            Debug.Log("OZ_BUILD: operador de campo integrado com 16 tomadas e dois níveis de detalhe.");
+            field.takeoff=Clip("jump_start");field.land=Clip("jump_land");
+            field.groundedController=OZFieldAnimation.Grounded(actor,field);
+            Debug.Log("OZ09: Avatar Humanoid, Blend Tree, 18 tomadas e dois níveis de detalhe.");
             return root;
         }
         catch { UnityEngine.Object.DestroyImmediate(root); throw; }
@@ -82,7 +84,7 @@ internal static class OZFieldOperator
         var m=AssetDatabase.LoadAssetAtPath<Material>(path);
         if(!m){m=new Material(Shader.Find("Universal Render Pipeline/Lit"));AssetDatabase.CreateAsset(m,path);}
         foreach(string id in new[]{"FieldColor","FieldNormal","FieldMask"})
-            OZContent.ConfigureTexture(Folder+id+".png",512,id=="FieldNormal" ? TextureImporterType.NormalMap : TextureImporterType.Default,id=="FieldMask");
+            OZContent.ConfigureTexture(Folder+id+".png",1024,id=="FieldNormal" ? TextureImporterType.NormalMap : TextureImporterType.Default,id=="FieldMask");
         m.SetTexture("_BaseMap",AssetDatabase.LoadAssetAtPath<Texture2D>(Folder+"FieldColor.png"));
         m.SetTexture("_BumpMap",AssetDatabase.LoadAssetAtPath<Texture2D>(Folder+"FieldNormal.png"));
         m.SetTexture("_MetallicGlossMap",AssetDatabase.LoadAssetAtPath<Texture2D>(Folder+"FieldMask.png"));

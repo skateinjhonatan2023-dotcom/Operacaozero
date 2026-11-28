@@ -58,9 +58,9 @@ public sealed class OZHud:MonoBehaviour {
     else if(Activate(p)){if(inventory||settings||expanded){ClearTouches();return;}}
     else if(lookFinger<0&&p.x>area.xMin+area.width*.25f){lookFinger=t.fingerId;}
    }
-   if(t.fingerId==moveFinger){moveSeen=!end;Vector2 drag=(p-stickOrigin)/Mathf.Max(1,Stick.width*.41f);
+   if(t.fingerId==moveFinger){moveSeen=!end;Vector2 drag=p-stickOrigin;
     drag.y=-drag.y;
-    game.Move=end ? Vector2.zero : drag.normalized*Mathf.InverseLerp(.075f,1f,drag.magnitude);if(end)moveFinger=-1;}
+    game.Move=end ? Vector2.zero : OZGroundMotion.Joystick(drag,Stick.width*.41f);if(end)moveFinger=-1;}
    if(t.fingerId==lookFinger){lookSeen=!end;if(!end)game.Look+=new Vector2(t.deltaPosition.x,-t.deltaPosition.y)*(720f/area.height);else lookFinger=-1;}
    if(t.fingerId==fireFinger){fireSeen=!end;if(end)fireFinger=-1;else game.Trigger=true;}
   }
